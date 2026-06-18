@@ -200,6 +200,7 @@
     <div class="pill">🧑‍💻 Lives: <span id="hudLives">3</span></div>
     <div class="pill">⭐ Story Points: <span id="hudScore">0</span></div>
     <div class="pill">🏆 Best: <span id="hudBest">0</span></div>
+    <div class="pill">🍔 <span id="hudWada">0/3</span></div>
     <div class="spacer"></div>
     <div class="pill" id="hudStage">Localhost</div>
     <div id="pauseBtn">⏸ Pause</div>
@@ -309,6 +310,7 @@ let state = {
   level: 0,
   score: 0,
   lives: 3,
+  wadaPav: 0,        // wada pavs collected toward the next 1-UP (every 3)
   best: Number(localStorage.getItem('devanshu_best') || 0),
   camX: 0,
   camY: 0,
@@ -700,6 +702,7 @@ const dom = {
   lives: document.getElementById('hudLives'),
   score: document.getElementById('hudScore'),
   best: document.getElementById('hudBest'),
+  wada: document.getElementById('hudWada'),
   stage: document.getElementById('hudStage'),
   banner: document.getElementById('stageBanner'),
   start: document.getElementById('startScreen'),
@@ -733,6 +736,7 @@ function startGame() {
   state.phase = PHASE.PLAY;
   state.score = 0;
   state.lives = 3;
+  state.wadaPav = 0;
   hide(dom.start); hide(dom.pause); hide(dom.over); hide(dom.win);
   show(dom.hud);
   loadLevel(0);
@@ -814,6 +818,7 @@ function updateHUD() {
   dom.lives.textContent = state.lives;
   dom.score.textContent = state.score;
   dom.best.textContent = state.best;
+  dom.wada.textContent = state.wadaPav + '/3';
   if (level) dom.stage.textContent = ENVIRONMENTS[level.env].name;
 }
 
@@ -959,6 +964,19 @@ function updateCollectibles() {
       Sound.coin();
       spawnParticles(c.x+12, c.y+12, collectibleColor(c.type), 12, 3);
       spawnFloatText(c.x, c.y, '+'+pts);
+      // Every 3 wada pavs (the "Coffee Cup" collectible) earns a 1-UP.
+      if (c.type === 'Coffee Cup') {
+        state.wadaPav++;
+        updateHUD();
+        if (state.wadaPav >= 3) {
+          state.wadaPav = 0;
+          state.lives++;
+          Sound.win();
+          spawnParticles(c.x+12, c.y, '#2ee6a6', 20, 4.5);
+          spawnFloatText(c.x, c.y-22, '1-UP! 🍔');
+          updateHUD();
+        }
+      }
     }
   }
 }
