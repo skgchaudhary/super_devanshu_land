@@ -1473,10 +1473,13 @@ function drawGoal(env) {
     ctx.lineTo(x+w-2+34, y-52+wave);
     ctx.lineTo(x+w-2, y-44);
     ctx.fill();
-    // label
+    // label — the goal points to the NEXT environment (final stage = PRODUCTION)
+    const goalName = level.isBoss
+      ? 'PRODUCTION'
+      : ENVIRONMENTS[LEVELS[state.level + 1].env].name;
     ctx.fillStyle = open ? '#2ee6a6' : '#ff5468';
     ctx.font='bold 12px Consolas, monospace'; ctx.textAlign='center';
-    ctx.fillText('PRODUCTION', x+w/2, y-66);
+    ctx.fillText(goalName, x+w/2, y-66);
     ctx.fillText('SERVER', x+w/2, y-2+h*0+ h+14);
     if (level.isBoss && boss) {
       ctx.fillStyle='#ff5468'; ctx.font='10px Consolas, monospace';
