@@ -117,6 +117,12 @@
     white-space: nowrap;
   }
   #hud .spacer { flex: 1; }
+  #hud .hud-icon {
+    height: 1.25em;
+    width: auto;
+    vertical-align: -0.28em;
+    margin-right: 2px;
+  }
   #pauseBtn {
     pointer-events: auto;
     cursor: pointer;
@@ -200,7 +206,7 @@
     <div class="pill">🧑‍💻 Lives: <span id="hudLives">3</span></div>
     <div class="pill">⭐ Story Points: <span id="hudScore">0</span></div>
     <div class="pill">🏆 Best: <span id="hudBest">0</span></div>
-    <div class="pill">🍔 <span id="hudWada">0/3</span></div>
+    <div class="pill"><img src="assets/wada_pav.png" alt="wada pav" class="hud-icon"> <span id="hudWada">0/3</span></div>
     <div class="spacer"></div>
     <div class="pill" id="hudStage">Localhost</div>
     <div id="pauseBtn">⏸ Pause</div>
@@ -973,7 +979,7 @@ function updateCollectibles() {
           state.lives++;
           Sound.win();
           spawnParticles(c.x+12, c.y, '#2ee6a6', 20, 4.5);
-          spawnFloatText(c.x, c.y-22, '1-UP! 🍔');
+          spawnFloatText(c.x, c.y-22, '1-UP!');
           updateHUD();
         }
       }
