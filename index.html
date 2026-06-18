@@ -1449,11 +1449,17 @@ function drawGoal(env) {
   if (SPRITES.productionServer && SPRITES.productionServer.__ready) {
     ctx.drawImage(SPRITES.productionServer, gx, GROUND_Y-160, 110, 160);
   } else {
+    // The goal points to the NEXT environment (final stage = PRODUCTION),
+    // so colour the server tower to match that environment's theme.
+    const goalEnvIdx = level.isBoss ? 4 : LEVELS[state.level + 1].env;
+    const goalEnv = ENVIRONMENTS[goalEnvIdx];
+    const accent = open ? goalEnv.plat : '#ff5468';      // main themed colour
+    const accentLit = open ? goalEnv.platTop : '#ff5468';// brighter LED tone
     // server tower
     const x = gx, y = GROUND_Y-160, w=90, h=160;
-    ctx.fillStyle = open ? '#0e3a2c' : '#3a1414';
+    ctx.fillStyle = open ? 'rgba(10,20,34,0.9)' : '#3a1414';
     ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = open ? '#2ee6a6' : '#ff5468';
+    ctx.strokeStyle = accent;
     ctx.lineWidth=2; ctx.strokeRect(x, y, w, h); ctx.lineWidth=1;
     // server units + LEDs
     for (let i=0;i<8;i++){
@@ -1461,12 +1467,13 @@ function drawGoal(env) {
       ctx.fillStyle='rgba(255,255,255,0.06)';
       ctx.fillRect(x+6, uy, w-12, 12);
       const on = ((state.time>>3)+i)%4<2;
-      ctx.fillStyle = open ? (on?'#2ee6a6':'#0c5a40') : '#ff5468';
+      ctx.fillStyle = on ? accentLit : 'rgba(255,255,255,0.12)';
+      if (!open) ctx.fillStyle = '#ff5468';
       ctx.fillRect(x+10, uy+4, 4, 4);
     }
     // flag pole + flag
     ctx.fillStyle='#888'; ctx.fillRect(x+w-6, y-60, 4, 60);
-    ctx.fillStyle = open ? '#2ee6a6' : '#ff5468';
+    ctx.fillStyle = accent;
     const wave = Math.sin(state.time*0.12)*4;
     ctx.beginPath();
     ctx.moveTo(x+w-2, y-60);
@@ -1474,10 +1481,8 @@ function drawGoal(env) {
     ctx.lineTo(x+w-2, y-44);
     ctx.fill();
     // label — the goal points to the NEXT environment (final stage = PRODUCTION)
-    const goalName = level.isBoss
-      ? 'PRODUCTION'
-      : ENVIRONMENTS[LEVELS[state.level + 1].env].name;
-    ctx.fillStyle = open ? '#2ee6a6' : '#ff5468';
+    const goalName = level.isBoss ? 'PRODUCTION' : goalEnv.name;
+    ctx.fillStyle = accent;
     ctx.font='bold 12px Consolas, monospace'; ctx.textAlign='center';
     ctx.fillText(goalName, x+w/2, y-66);
     ctx.fillText('SERVER', x+w/2, y-2+h*0+ h+14);
