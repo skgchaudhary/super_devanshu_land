@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Super Devanshu Land: Deployment Engineer Edition</title>
+<style>
+  /* ============================================================
+     Super Devanshu Land — single file styling
+     ============================================================ */
+  :root {
+    --hud-bg: rgba(10, 18, 30, 0.78);
+    --accent: #2ee6a6;
+    --accent2: #ffcc3f;
+    --danger: #ff5468;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0f1a;
+    overflow: hidden;
+    font-family: Consolas, "Courier New", monospace;
+    color: #eaf2ff;
+    user-select: none;
+    touch-action: none;
+  }
+  #wrap {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #05080f;
+  }
+  canvas {
+    display: block;
+    background: #0d1830;
+    image-rendering: pixelated;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  /* ---------- Overlay screens (menus) ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(5, 10, 22, 0.86);
+    backdrop-filter: blur(3px);
+    z-index: 20;
+    padding: 20px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay h1 {
+    font-size: clamp(22px, 5vw, 46px);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    color: var(--accent);
+    text-shadow: 0 0 18px rgba(46,230,166,0.55);
+  }
+  .overlay h2 {
+    font-size: clamp(14px, 2.6vw, 22px);
+    color: var(--accent2);
+    margin-bottom: 18px;
+    font-weight: 600;
+  }
+  .overlay p { max-width: 640px; line-height: 1.55; margin-bottom: 10px; color: #b9c8e0; font-size: clamp(12px,1.8vw,16px);}
+  .overlay .tag { color: var(--accent); }
+  .btn {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 26px;
+    margin: 8px;
+    font-size: clamp(14px, 2.2vw, 18px);
+    font-weight: 700;
+    background: linear-gradient(180deg, #2ee6a6, #15a877);
+    color: #042018;
+    box-shadow: 0 6px 0 #0c6347, 0 10px 22px rgba(0,0,0,0.4);
+    transition: transform .06s ease, box-shadow .06s ease;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0c6347; }
+  .btn.secondary {
+    background: linear-gradient(180deg, #3d5a8a, #2a3f63);
+    color: #eaf2ff;
+    box-shadow: 0 6px 0 #182a47, 0 10px 22px rgba(0,0,0,0.4);
+  }
+  .btn.secondary:active { box-shadow: 0 2px 0 #182a47; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center;
+    margin: 14px 0 4px; max-width: 680px; font-size: 13px; color: #9fb2d0;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; display:inline-block; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 14px;
+    font-size: clamp(12px, 1.8vw, 16px);
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 10;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+  #hud .pill {
+    background: var(--hud-bg);
+    border: 1px solid rgba(120,160,220,0.25);
+    border-radius: 999px;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+  #hud .spacer { flex: 1; }
+  #pauseBtn {
+    pointer-events: auto;
+    cursor: pointer;
+    background: var(--hud-bg);
+    border: 1px solid rgba(120,160,220,0.25);
+    color: #eaf2ff; font-weight: 800;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 15px;
+  }
+  #stageBanner {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,18,30,0.85);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: clamp(16px, 3vw, 28px);
+    font-weight: 800;
+    color: var(--accent);
+    z-index: 12;
+    opacity: 0;
+    transition: opacity .4s ease;
+    text-shadow: 0 0 16px rgba(46,230,166,0.6);
+    pointer-events: none;
+    text-align:center;
+  }
+  #stageBanner small { display:block; font-size: 0.55em; color:#b9c8e0; font-weight:600; margin-top:4px;}
+
+  /* ---------- Credit line ---------- */
+  #credit {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 25;
+    pointer-events: none;
+    font-size: clamp(10px, 1.6vw, 14px);
+    font-weight: 300;
+    letter-spacing: 1.5px;
+    color: rgba(234, 242, 255, 0.6);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    white-space: nowrap;
+  }
+
+  /* ---------- Touch controls ---------- */
+  #touch {
+    position: absolute; inset: 0; z-index: 15; pointer-events: none;
+  }
+  .tbtn {
+    position: absolute; bottom: 22px;
+    width: 74px; height: 74px;
+    border-radius: 50%;
+    background: rgba(46,230,166,0.16);
+    border: 2px solid rgba(46,230,166,0.5);
+    color: #eaf2ff;
+    font-size: 30px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto;
+    touch-action: none;
+  }
+  .tbtn:active { background: rgba(46,230,166,0.35); }
+  #btnLeft  { left: 20px; }
+  #btnRight { left: 110px; }
+  #btnJump  { right: 24px; background: rgba(255,204,63,0.16); border-color: rgba(255,204,63,0.55); }
+  #touch.show { /* only enabled on touch devices via JS */ }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="960" height="540"></canvas>
+
+  <!-- Credit line, top center -->
+  <div id="credit">Developed by Suneet Chaudhary</div>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div class="pill">🧑‍💻 Lives: <span id="hudLives">3</span></div>
+    <div class="pill">⭐ Score: <span id="hudScore">0</span></div>
+    <div class="pill">🏆 Best: <span id="hudBest">0</span></div>
+    <div class="spacer"></div>
+    <div class="pill" id="hudStage">Localhost</div>
+    <div id="pauseBtn">⏸ Pause</div>
+  </div>
+
+  <div id="stageBanner"></div>
+
+  <!-- ============ START SCREEN ============ -->
+  <div id="startScreen" class="overlay">
+    <h1>🚀 Super Devanshu Land</h1>
+    <h2>Deployment Engineer Edition</h2>
+    <p><b>Devanshu</b> is a Deployment Engineer on a mission to ship code safely to
+       <span class="tag">PRODUCTION</span> without triggering a rollback.</p>
+    <p>Travel through <b>Localhost → DEV → UAT → STAGE → PRODUCTION</b>,
+       collect approvals, stomp bugs, dodge expired credentials, and survive the
+       dreaded <b>Friday Evening Deployment</b> boss.</p>
+    <div class="legend">
+      <span><i class="swatch" style="background:#ffcc3f"></i>PR Approval</span>
+      <span><i class="swatch" style="background:#4aa3ff"></i>Jira Ticket</span>
+      <span><i class="swatch" style="background:#8b5a2b"></i>Coffee Cup</span>
+      <span><i class="swatch" style="background:#2ee6a6"></i>Green Build</span>
+      <span><i class="swatch" style="background:#ff5468"></i>Enemy / Bug</span>
+    </div>
+    <p style="font-size:13px;color:#8aa">
+      <b>Desktop:</b> ← → / A D to move · ↑ / W / Space to jump · P to pause<br>
+      <b>Mobile:</b> on-screen buttons
+    </p>
+    <button class="btn" id="startBtn">▶ Start Deployment</button>
+  </div>
+
+  <!-- ============ PAUSE SCREEN ============ -->
+  <div id="pauseScreen" class="overlay hidden">
+    <h1>⏸ Paused</h1>
+    <h2>Pipeline on hold</h2>
+    <button class="btn" id="resumeBtn">▶ Resume</button>
+    <button class="btn secondary" id="restartBtn">↺ Restart Run</button>
+  </div>
+
+  <!-- ============ GAME OVER SCREEN ============ -->
+  <div id="overScreen" class="overlay hidden">
+    <h1 style="color:var(--danger);text-shadow:0 0 18px rgba(255,84,104,0.5)">💥 ROLLBACK TRIGGERED</h1>
+    <h2 id="overReason">The deployment failed.</h2>
+    <p>Final Score: <b id="overScore">0</b> &nbsp;·&nbsp; Best: <b id="overBest">0</b></p>
+    <p style="color:#8aa">Don't worry — every senior engineer has broken prod at least once.</p>
+    <button class="btn" id="retryBtn">↺ Redeploy (Restart)</button>
+  </div>
+
+  <!-- ============ WIN SCREEN ============ -->
+  <div id="winScreen" class="overlay hidden">
+    <h1>🚀 DEPLOYMENT SUCCESSFUL</h1>
+    <h2 id="winStakeholders">Stakeholders: HAPPY</h2>
+    <p style="font-family:Consolas,'Courier New',monospace;text-align:left;background:rgba(0,0,0,0.4);padding:16px 22px;border-radius:10px;border:1px solid rgba(46,230,166,0.3)">
+      Build:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent)">PASSED</span><br>
+      Tests:&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--accent)">PASSED</span><br>
+      Rollback:&nbsp;<span style="color:var(--accent)">NOT REQUIRED</span><br>
+      Stakeholders: <span style="color:var(--accent)">HAPPY</span>
+    </p>
+    <p>Final Score: <b id="winScore">0</b> &nbsp;·&nbsp; Best: <b id="winBest">0</b></p>
+    <button class="btn" id="playAgainBtn">▶ Deploy Again</button>
+  </div>
+
+  <!-- ============ TOUCH CONTROLS ============ -->
+  <div id="touch">
+    <div class="tbtn" id="btnLeft">◀</div>
+    <div class="tbtn" id="btnRight">▶</div>
+    <div class="tbtn" id="btnJump">▲</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================================
+   SUPER DEVANSHU LAND: DEPLOYMENT ENGINEER EDITION
+   A single-file HTML5 + Canvas platformer. Vanilla JS, no dependencies.
+
+   Sections:
+     1. Config & globals
+     2. Asset/sprite variables (placeholder rectangles — swap for images here)
+     3. Audio engine (WebAudio synthesized SFX)
+     4. Input (keyboard + touch)
+     5. Level definitions (5 environments + boss)
+     6. Entity helpers (player, enemies, collectibles, particles)
+     7. Game state machine & loop
+     8. Update logic (physics, collisions, camera)
+     9. Render logic (parallax background, world, HUD)
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. CONFIG & GLOBALS
+   ------------------------------------------------------------------------- */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const VIEW_W = 960, VIEW_H = 540;          // internal render resolution
+const GRAVITY = 0.62;
+const MOVE_ACCEL = 0.85;
+const MAX_SPEED = 4.6;
+const FRICTION = 0.80;
+const JUMP_VELOCITY = -12.6;
+const TILE = 40;                            // logical tile size for layout
+
+// Game phases
+const PHASE = { MENU:'menu', PLAY:'play', PAUSE:'pause', OVER:'over', WIN:'win', TRANSITION:'transition' };
+
+let state = {
+  phase: PHASE.MENU,
+  level: 0,
+  score: 0,
+  lives: 3,
+  best: Number(localStorage.getItem('devanshu_best') || 0),
+  camX: 0,
+  camY: 0,
+  shake: 0,
+  time: 0,
+};
+
+/* ---------------------------------------------------------------------------
+   2. ASSET / SPRITE VARIABLES
+   ---------------------------------------------------------------------------
+   Every drawable is routed through one of these slots. They default to `null`,
+   which makes the renderer fall back to a coloured rectangle placeholder.
+   To use real artwork later, assign an Image object to the matching slot.
+
+   TODO(assets): replace the placeholder `null`s below, e.g.
+       SPRITES.player = loadImage('assets/devanshu.png');
+       SPRITES.enemies['Legacy Bug'] = loadImage('assets/legacy_bug.png');
+       SPRITES.collectibles['PR Approval'] = loadImage('assets/pr.png');
+       SPRITES.productionServer = loadImage('assets/prod_server.png');
+   The draw helpers already check `if (img) drawImage else drawRect`.
+------------------------------------------------------------------------- */
+function loadImage(src) {
+  const img = new Image();
+  img.src = src;
+  img.__ready = false;
+  img.onload = () => { img.__ready = true; };
+  return img;
+}
+
+const SPRITES = {
+  // Devanshu main character image
+  player: loadImage('assets/devanshu.png'),
+
+  // TODO(assets): one image (or sheet) per enemy type — keys must match enemy.type
+  enemies: {
+    'Legacy Bug': null,
+    'Merge Conflict': null,
+    'Missing ENV Variable': null,
+    'Database Migration Failure': null,
+    'QA Reopened Ticket': null,
+    '502 Gateway Error': null,
+  },
+
+  // TODO(assets): collectible icons
+  collectibles: {
+    'PR Approval': null,
+    'Jira Ticket': null,
+    'Coffee Cup': loadImage('assets/wada_pav.png'), // Wada Pav replaces the coffee/tea cup
+    'Green Build Badge': null,
+  },
+
+  // TODO(assets): the final goal art
+  productionServer: null,
+
+  // TODO(assets): the boss "Friday Evening Deployment"
+  boss: null,
+};
+
+/* ---------------------------------------------------------------------------
+   3. AUDIO ENGINE — synthesized SFX (no external files)
+   ------------------------------------------------------------------------- */
+const Sound = (() => {
+  let actx = null;
+  let enabled = true;
+  function ensure() {
+    if (!actx) {
+      try { actx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { enabled = false; }
+    }
+    if (actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  // generic blip
+  function tone(freq, dur, type='square', vol=0.18, slideTo=null) {
+    if (!enabled) return;
+    const a = ensure(); if (!a) return;
+    const o = a.createOscillator();
+    const g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, a.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, a.currentTime + dur);
+    g.gain.setValueAtTime(vol, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(); o.stop(a.currentTime + dur + 0.02);
+  }
+  return {
+    toggle() { enabled = !enabled; return enabled; },
+    isEnabled() { return enabled; },
+    jump()   { tone(420, 0.16, 'square', 0.16, 720); },
+    coin()   { tone(880, 0.08, 'square', 0.14, 1320); setTimeout(()=>tone(1320,0.10,'square',0.12),60); },
+    stomp()  { tone(180, 0.14, 'sawtooth', 0.2, 60); },
+    hurt()   { tone(300, 0.3, 'sawtooth', 0.22, 70); },
+    boss()   { tone(110, 0.4, 'sawtooth', 0.22, 55); },
+    win()    { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.18,'square',0.18),i*120)); },
+    lose()   { [400,300,200,120].forEach((f,i)=>setTimeout(()=>tone(f,0.22,'sawtooth',0.2),i*130)); },
+    level()  { [659,880].forEach((f,i)=>setTimeout(()=>tone(f,0.14,'triangle',0.16),i*110)); },
+    throwInc(){ tone(640, 0.18, 'sawtooth', 0.16, 180); },
+  };
+})();
+
+/* ---------------------------------------------------------------------------
+   4. INPUT — keyboard + touch
+   ------------------------------------------------------------------------- */
+const input = { left:false, right:false, jump:false, jumpHeld:false };
+
+const keymap = {
+  ArrowLeft:'left', KeyA:'left',
+  ArrowRight:'right', KeyD:'right',
+  ArrowUp:'jump', KeyW:'jump', Space:'jump',
+};
+window.addEventListener('keydown', e => {
+  if (e.code === 'KeyP') { togglePause(); return; }
+  const a = keymap[e.code];
+  if (a) {
+    if (a === 'jump' && !input.jumpHeld) input.jump = true;
+    if (a === 'jump') input.jumpHeld = true;
+    else input[a] = true;
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => {
+  const a = keymap[e.code];
+  if (a) {
+    if (a === 'jump') input.jumpHeld = false;
+    else input[a] = false;
+    e.preventDefault();
+  }
+});
+
+// Touch buttons
+function bindTouch(id, on, off) {
+  const el = document.getElementById(id);
+  const start = e => { e.preventDefault(); on(); };
+  const end   = e => { e.preventDefault(); off(); };
+  el.addEventListener('touchstart', start, {passive:false});
+  el.addEventListener('touchend', end, {passive:false});
+  el.addEventListener('touchcancel', end, {passive:false});
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', end);
+  el.addEventListener('mouseleave', end);
+}
+bindTouch('btnLeft',  () => input.left = true,  () => input.left = false);
+bindTouch('btnRight', () => input.right = true, () => input.right = false);
+bindTouch('btnJump',  () => { if (!input.jumpHeld){input.jump=true;} input.jumpHeld=true; },
+                      () => input.jumpHeld = false);
+
+// Show touch controls only when a touch device is detected
+const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+if (!isTouch) document.getElementById('touch').classList.add('hide');
+
+/* ---------------------------------------------------------------------------
+   5. LEVEL DEFINITIONS
+   ---------------------------------------------------------------------------
+   Each level = a themed environment. Coordinates are in world pixels.
+   Platforms: {x,y,w,h}. The first/ground platform spans the level.
+   Collectibles, enemies, and obstacles are placed by hand for good pacing.
+------------------------------------------------------------------------- */
+const ENEMY_TYPES = ['Legacy Bug','Merge Conflict','Missing ENV Variable',
+                     'Database Migration Failure','QA Reopened Ticket','502 Gateway Error'];
+const COLLECTIBLE_TYPES = ['PR Approval','Jira Ticket','Coffee Cup','Green Build Badge'];
+const COLLECTIBLE_POINTS = { 'PR Approval':150,'Jira Ticket':75,'Coffee Cup':50,'Green Build Badge':250 };
+
+// Environment palettes & labels
+const ENVIRONMENTS = [
+  { name:'Localhost', plat:'#7c5cff', platTop:'#a18bff', sky1:'#0d1830', sky2:'#1a2a52', tag:'127.0.0.1' },
+  { name:'DEV',       plat:'#3aa0ff', platTop:'#79c2ff', sky1:'#08182c', sky2:'#123b63', tag:'dev.env' },
+  { name:'UAT',       plat:'#ff9f43', platTop:'#ffc078', sky1:'#241404', sky2:'#5a3410', tag:'uat.test' },
+  { name:'STAGE',     plat:'#ff6b9d', platTop:'#ffa0c2', sky1:'#1a0820', sky2:'#3d1140', tag:'staging' },
+  { name:'PRODUCTION',plat:'#2ee6a6', platTop:'#7af0cb', sky1:'#031a14', sky2:'#0a4030', tag:'prod.live' },
+];
+
+const GROUND_Y = 460;   // top of ground in world coords (view height 540)
+
+// Helper to make collectibles/enemies tersely
+const C = (x,y,type) => ({x,y,type});
+const E = (x,minX,maxX,type,speed=1.1) => ({x,y:GROUND_Y-34,minX,maxX,type,speed,dir:1,alive:true,onPlat:null});
+
+/*
+  Levels 0..3 are running platform stages. Level 4 (PRODUCTION) is the boss
+  arena that ends at the Production Server goal.
+*/
+const LEVELS = [
+  /* ---------- LEVEL 0: LOCALHOST ---------- */
+  {
+    env: 0, width: 3000, goalX: 2860,
+    platforms: [
+      {x:0, y:GROUND_Y, w:3000, h:120},
+      {x:420, y:360, w:160, h:24},
+      {x:680, y:280, w:140, h:24},
+      {x:980, y:330, w:180, h:24},
+      {x:1340,y:260, w:150, h:24},
+      {x:1640,y:350, w:200, h:24},
+      {x:2050,y:300, w:160, h:24},
+      {x:2360,y:250, w:150, h:24},
+    ],
+    collectibles: [
+      C(450,300,'Coffee Cup'), C(520,300,'Coffee Cup'),
+      C(710,230,'PR Approval'), C(1020,280,'Jira Ticket'),
+      C(1100,280,'Jira Ticket'), C(1380,210,'Green Build Badge'),
+      C(1700,300,'Coffee Cup'), C(1760,300,'PR Approval'),
+      C(2090,250,'Jira Ticket'), C(2400,200,'Green Build Badge'),
+      C(2650,420,'Coffee Cup'),
+    ],
+    enemies: [
+      E(900, 820, 1140, 'Legacy Bug', 1.0),
+      E(1500, 1400, 1700, 'Merge Conflict', 1.4),
+      E(2200, 2000, 2350, 'Legacy Bug', 1.2),
+    ],
+    obstacles: [ // type: 'pipeline' | 'creds' | 'dns' | 'rollback'
+      {x:1240, y:GROUND_Y-30, w:30, h:30, type:'creds'},
+      {x:1900, y:GROUND_Y-30, w:30, h:30, type:'pipeline'},
+    ],
+  },
+  /* ---------- LEVEL 1: DEV ---------- */
+  {
+    env: 1, width: 3400, goalX: 3260,
+    platforms: [
+      {x:0, y:GROUND_Y, w:3400, h:120},
+      {x:360, y:350, w:140, h:24},
+      {x:620, y:280, w:120, h:24},
+      {x:880, y:220, w:120, h:24},
+      {x:1180,y:300, w:170, h:24},
+      {x:1520,y:240, w:140, h:24},
+      {x:1820,y:330, w:160, h:24},
+      {x:2140,y:270, w:150, h:24},
+      {x:2460,y:210, w:140, h:24},
+      {x:2760,y:320, w:180, h:24},
+    ],
+    collectibles: [
+      C(390,300,'Jira Ticket'), C(660,230,'PR Approval'),
+      C(920,170,'Green Build Badge'), C(1220,250,'Coffee Cup'),
+      C(1280,250,'Coffee Cup'), C(1560,190,'Jira Ticket'),
+      C(1870,280,'PR Approval'), C(2180,220,'Coffee Cup'),
+      C(2500,160,'Green Build Badge'), C(2820,270,'Jira Ticket'),
+      C(3000,420,'PR Approval'),
+    ],
+    enemies: [
+      E(700, 600, 980, 'Missing ENV Variable', 1.3),
+      E(1300, 1150, 1480, 'Merge Conflict', 1.6),
+      E(2000, 1850, 2200, 'Legacy Bug', 1.2),
+      E(2700, 2550, 2900, 'Missing ENV Variable', 1.5),
+    ],
+    obstacles: [
+      {x:1050, y:GROUND_Y-30, w:30, h:30, type:'dns'},
+      {x:1700, y:GROUND_Y-30, w:30, h:30, type:'creds'},
+      {x:2350, y:GROUND_Y-30, w:30, h:30, type:'pipeline'},
+    ],
+  },
+  /* ---------- LEVEL 2: UAT ---------- */
+  {
+    env: 2, width: 3600, goalX: 3460,
+    platforms: [
+      {x:0, y:GROUND_Y, w:3600, h:120},
+      {x:340, y:330, w:130, h:24},
+      {x:600, y:250, w:110, h:24},
+      {x:840, y:330, w:120, h:24},
+      {x:1120,y:260, w:140, h:24},
+      {x:1420,y:200, w:120, h:24},
+      {x:1700,y:300, w:150, h:24},
+      {x:2000,y:230, w:130, h:24},
+      {x:2300,y:320, w:160, h:24},
+      {x:2620,y:250, w:140, h:24},
+      {x:2920,y:200, w:130, h:24},
+      {x:3200,y:320, w:170, h:24},
+    ],
+    collectibles: [
+      C(370,280,'Coffee Cup'), C(640,200,'PR Approval'),
+      C(1160,210,'Jira Ticket'), C(1460,150,'Green Build Badge'),
+      C(1740,250,'Coffee Cup'), C(2040,180,'PR Approval'),
+      C(2340,270,'Jira Ticket'), C(2660,200,'Coffee Cup'),
+      C(2960,150,'Green Build Badge'), C(3240,270,'PR Approval'),
+      C(3360,420,'Jira Ticket'),
+    ],
+    enemies: [
+      E(750, 600, 940, 'QA Reopened Ticket', 1.5),
+      E(1250, 1100, 1400, 'Merge Conflict', 1.7),
+      E(1850, 1700, 2050, 'QA Reopened Ticket', 1.4),
+      E(2450, 2300, 2650, 'Legacy Bug', 1.3),
+      E(3000, 2850, 3150, 'Missing ENV Variable', 1.6),
+    ],
+    obstacles: [
+      {x:980, y:GROUND_Y-30, w:30, h:30, type:'rollback'},
+      {x:1600, y:GROUND_Y-30, w:30, h:30, type:'dns'},
+      {x:2200, y:GROUND_Y-30, w:30, h:30, type:'creds'},
+      {x:2800, y:GROUND_Y-30, w:30, h:30, type:'pipeline'},
+    ],
+  },
+  /* ---------- LEVEL 3: STAGE ---------- */
+  {
+    env: 3, width: 3800, goalX: 3660,
+    platforms: [
+      {x:0, y:GROUND_Y, w:3800, h:120},
+      {x:320, y:320, w:120, h:24},
+      {x:560, y:240, w:110, h:24},
+      {x:820, y:300, w:120, h:24},
+      {x:1080,y:220, w:130, h:24},
+      {x:1360,y:300, w:140, h:24},
+      {x:1640,y:200, w:120, h:24},
+      {x:1920,y:280, w:140, h:24},
+      {x:2220,y:210, w:130, h:24},
+      {x:2520,y:300, w:150, h:24},
+      {x:2820,y:230, w:130, h:24},
+      {x:3120,y:300, w:140, h:24},
+      {x:3400,y:220, w:130, h:24},
+    ],
+    collectibles: [
+      C(350,270,'PR Approval'), C(600,190,'Green Build Badge'),
+      C(1120,170,'Jira Ticket'), C(1400,250,'Coffee Cup'),
+      C(1680,150,'PR Approval'), C(1960,230,'Jira Ticket'),
+      C(2260,160,'Green Build Badge'), C(2560,250,'Coffee Cup'),
+      C(2860,180,'PR Approval'), C(3160,250,'Jira Ticket'),
+      C(3440,170,'Green Build Badge'),
+    ],
+    enemies: [
+      E(700, 560, 880, '502 Gateway Error', 1.6),
+      E(1200, 1050, 1380, 'Merge Conflict', 1.8),
+      E(1800, 1650, 1980, 'QA Reopened Ticket', 1.5),
+      E(2400, 2250, 2580, 'Database Migration Failure', 1.4),
+      E(3000, 2850, 3180, '502 Gateway Error', 1.7),
+    ],
+    obstacles: [
+      {x:920, y:GROUND_Y-30, w:30, h:30, type:'pipeline'},
+      {x:1500, y:GROUND_Y-30, w:30, h:30, type:'rollback'},
+      {x:2100, y:GROUND_Y-30, w:30, h:30, type:'creds'},
+      {x:2700, y:GROUND_Y-30, w:30, h:30, type:'dns'},
+      {x:3280, y:GROUND_Y-30, w:30, h:30, type:'rollback'},
+    ],
+  },
+  /* ---------- LEVEL 4: PRODUCTION (BOSS ARENA) ---------- */
+  {
+    env: 4, width: 1800, goalX: 1680, isBoss: true,
+    platforms: [
+      {x:0, y:GROUND_Y, w:1800, h:120},
+      {x:260, y:340, w:160, h:24},
+      {x:1380,y:340, w:160, h:24},
+      {x:760, y:280, w:200, h:24},
+    ],
+    collectibles: [
+      C(330,300,'Coffee Cup'), C(840,240,'Green Build Badge'),
+      C(1450,300,'Coffee Cup'),
+    ],
+    enemies: [],
+    obstacles: [],
+    boss: { x:1300, y:GROUND_Y-90, w:80, h:90, hp:5, dir:-1, speed:1.6, minX:700, maxX:1620, fireTimer:0 },
+  },
+];
+
+/* ---------------------------------------------------------------------------
+   6. ENTITY HELPERS — live (per-run) objects
+   ------------------------------------------------------------------------- */
+const player = {
+  x:80, y:0, w:30, h:42,
+  vx:0, vy:0,
+  onGround:false,
+  facing:1,
+  invuln:0,         // frames of invulnerability after a hit
+  animTime:0,
+};
+
+let level;            // the static level definition currently loaded
+let collectibles = [];// live copies (so we can mutate "collected")
+let enemies = [];
+let obstacles = [];
+let boss = null;
+let projectiles = []; // boss "Production Incidents"
+let particles = [];
+
+// Particle burst
+function spawnParticles(x, y, color, count=10, spread=3.2) {
+  for (let i=0;i<count;i++){
+    particles.push({
+      x, y,
+      vx:(Math.random()-0.5)*spread*2,
+      vy:(Math.random()-0.5)*spread*2 - 1.5,
+      life:30+Math.random()*20,
+      maxLife:50,
+      color,
+      size:2+Math.random()*3,
+    });
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   7. GAME STATE MACHINE
+   ------------------------------------------------------------------------- */
+const dom = {
+  hud: document.getElementById('hud'),
+  lives: document.getElementById('hudLives'),
+  score: document.getElementById('hudScore'),
+  best: document.getElementById('hudBest'),
+  stage: document.getElementById('hudStage'),
+  banner: document.getElementById('stageBanner'),
+  start: document.getElementById('startScreen'),
+  pause: document.getElementById('pauseScreen'),
+  over: document.getElementById('overScreen'),
+  win: document.getElementById('winScreen'),
+};
+
+function show(el){ el.classList.remove('hidden'); }
+function hide(el){ el.classList.add('hidden'); }
+
+function loadLevel(idx) {
+  state.level = idx;
+  level = LEVELS[idx];
+  // deep-ish copies so collected/alive flags reset each load
+  collectibles = level.collectibles.map(c => ({...c, collected:false, bob:Math.random()*Math.PI*2}));
+  enemies = level.enemies.map(e => ({...e, alive:true, dir:1}));
+  obstacles = level.obstacles.map(o => ({...o}));
+  boss = level.boss ? {...level.boss, fireTimer:90} : null;
+  projectiles = [];
+  particles = [];
+  // place player at the start
+  player.x = 80; player.y = GROUND_Y - player.h;
+  player.vx = 0; player.vy = 0; player.invuln = 60;
+  state.camX = 0; state.camY = 0;
+  updateHUD();
+  showBanner(ENVIRONMENTS[level.env].name, ENVIRONMENTS[level.env].tag);
+}
+
+function startGame() {
+  state.phase = PHASE.PLAY;
+  state.score = 0;
+  state.lives = 3;
+  hide(dom.start); hide(dom.pause); hide(dom.over); hide(dom.win);
+  show(dom.hud);
+  loadLevel(0);
+}
+
+function nextLevel() {
+  if (state.level + 1 < LEVELS.length) {
+    Sound.level();
+    loadLevel(state.level + 1);
+    state.phase = PHASE.PLAY;
+  } else {
+    winGame();
+  }
+}
+
+function loseLife(reason) {
+  state.lives--;
+  Sound.hurt();
+  state.shake = 14;
+  spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ff5468', 18, 4);
+  if (state.lives <= 0) {
+    gameOver(reason || 'Out of lives — too many incidents.');
+  } else {
+    // respawn at start of current level, keep score
+    player.x = 80; player.y = GROUND_Y - player.h;
+    player.vx = 0; player.vy = 0; player.invuln = 90;
+    state.camX = 0;
+  }
+  updateHUD();
+}
+
+function gameOver(reason) {
+  state.phase = PHASE.OVER;
+  Sound.lose();
+  saveBest();
+  document.getElementById('overReason').textContent = reason;
+  document.getElementById('overScore').textContent = state.score;
+  document.getElementById('overBest').textContent = state.best;
+  show(dom.over);
+}
+
+function winGame() {
+  state.phase = PHASE.WIN;
+  Sound.win();
+  saveBest();
+  document.getElementById('winScore').textContent = state.score;
+  document.getElementById('winBest').textContent = state.best;
+  // little stakeholder joke that scales with score
+  const happy = state.score > 3000 ? 'ECSTATIC 🎉' : state.score > 1500 ? 'HAPPY 😄' : 'RELIEVED 😅';
+  document.getElementById('winStakeholders').textContent = 'Stakeholders: ' + happy;
+  show(dom.win);
+  spawnParticles(player.x, player.y, '#2ee6a6', 40, 6);
+}
+
+function saveBest() {
+  if (state.score > state.best) {
+    state.best = state.score;
+    localStorage.setItem('devanshu_best', String(state.best));
+  }
+}
+
+function togglePause() {
+  if (state.phase === PHASE.PLAY) {
+    state.phase = PHASE.PAUSE;
+    show(dom.pause);
+  } else if (state.phase === PHASE.PAUSE) {
+    state.phase = PHASE.PLAY;
+    hide(dom.pause);
+  }
+}
+
+function addScore(n) {
+  state.score += n;
+  if (state.score > state.best) { state.best = state.score; }
+  updateHUD();
+}
+
+function updateHUD() {
+  dom.lives.textContent = state.lives;
+  dom.score.textContent = state.score;
+  dom.best.textContent = state.best;
+  if (level) dom.stage.textContent = ENVIRONMENTS[level.env].name;
+}
+
+let bannerTimer = 0;
+function showBanner(name, tag) {
+  dom.banner.innerHTML = name + '<small>' + tag + ' — environment loaded</small>';
+  dom.banner.style.opacity = '1';
+  bannerTimer = 110;
+}
+
+// Wire up buttons
+document.getElementById('startBtn').onclick   = () => { Sound.jump(); startGame(); };
+document.getElementById('resumeBtn').onclick  = () => togglePause();
+document.getElementById('restartBtn').onclick = () => { hide(dom.pause); startGame(); };
+document.getElementById('retryBtn').onclick   = () => startGame();
+document.getElementById('playAgainBtn').onclick = () => startGame();
+document.getElementById('pauseBtn').onclick   = () => togglePause();
+
+/* ---------------------------------------------------------------------------
+   8. UPDATE LOGIC
+   ------------------------------------------------------------------------- */
+function aabb(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function update() {
+  state.time++;
+  if (bannerTimer > 0) { bannerTimer--; if (bannerTimer === 0) dom.banner.style.opacity = '0'; }
+  if (state.phase !== PHASE.PLAY) { updateParticles(); return; }
+
+  updatePlayer();
+  updateEnemies();
+  updateCollectibles();
+  updateObstacles();
+  if (boss) updateBoss();
+  updateProjectiles();
+  updateParticles();
+  updateCamera();
+  checkGoal();
+
+  if (state.shake > 0) state.shake--;
+}
+
+function updatePlayer() {
+  const p = player;
+  // horizontal
+  if (input.left)  { p.vx -= MOVE_ACCEL; p.facing = -1; }
+  if (input.right) { p.vx += MOVE_ACCEL; p.facing = 1; }
+  if (!input.left && !input.right) p.vx *= FRICTION;
+  p.vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, p.vx));
+
+  // jump
+  if (input.jump && p.onGround) {
+    p.vy = JUMP_VELOCITY;
+    p.onGround = false;
+    Sound.jump();
+    spawnParticles(p.x+p.w/2, p.y+p.h, '#ffffff', 6, 2);
+  }
+  input.jump = false; // consume
+  // variable jump height (release to cut)
+  if (!input.jumpHeld && p.vy < -4) p.vy = -4;
+
+  // gravity
+  p.vy += GRAVITY;
+  if (p.vy > 16) p.vy = 16;
+
+  // integrate X then resolve
+  p.x += p.vx;
+  resolveCollisions('x');
+  // integrate Y then resolve
+  p.y += p.vy;
+  p.onGround = false;
+  resolveCollisions('y');
+
+  // world bounds
+  if (p.x < 0) { p.x = 0; p.vx = 0; }
+  if (p.x + p.w > level.width) { p.x = level.width - p.w; p.vx = 0; }
+
+  // fell off the world
+  if (p.y > VIEW_H + 200) {
+    loseLife('Fell into the void (segfault).');
+  }
+
+  if (p.invuln > 0) p.invuln--;
+  p.animTime += Math.abs(p.vx) * 0.2;
+}
+
+function resolveCollisions(axis) {
+  const p = player;
+  for (const plat of level.platforms) {
+    if (!aabb(p, plat)) continue;
+    if (axis === 'x') {
+      if (p.vx > 0) p.x = plat.x - p.w;
+      else if (p.vx < 0) p.x = plat.x + plat.w;
+      p.vx = 0;
+    } else {
+      if (p.vy > 0) { // landing
+        p.y = plat.y - p.h;
+        p.vy = 0;
+        p.onGround = true;
+      } else if (p.vy < 0) { // bonk head
+        p.y = plat.y + plat.h;
+        p.vy = 0;
+      }
+    }
+  }
+}
+
+function updateEnemies() {
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    e.x += e.speed * e.dir;
+    if (e.x < e.minX) { e.x = e.minX; e.dir = 1; }
+    if (e.x > e.maxX) { e.x = e.maxX; e.dir = -1; }
+
+    const eb = {x:e.x, y:e.y, w:34, h:34};
+    if (player.invuln <= 0 && aabb(player, eb)) {
+      // stomp if falling onto the top
+      const fromAbove = player.vy > 0 && (player.y + player.h) - eb.y < 22;
+      if (fromAbove) {
+        e.alive = false;
+        player.vy = JUMP_VELOCITY * 0.7; // bounce
+        Sound.stomp();
+        addScore(200);
+        spawnParticles(e.x+17, e.y+17, '#ff5468', 14, 3.5);
+        spawnFloatText(e.x, e.y, '+200');
+      } else {
+        loseLife('Touched a ' + e.type + '.');
+      }
+    }
+  }
+}
+
+function updateCollectibles() {
+  for (const c of collectibles) {
+    if (c.collected) continue;
+    c.bob += 0.08;
+    const cb = {x:c.x, y:c.y + Math.sin(c.bob)*4, w:24, h:24};
+    if (aabb(player, cb)) {
+      c.collected = true;
+      const pts = COLLECTIBLE_POINTS[c.type] || 50;
+      addScore(pts);
+      Sound.coin();
+      spawnParticles(c.x+12, c.y+12, collectibleColor(c.type), 12, 3);
+      spawnFloatText(c.x, c.y, '+'+pts);
+    }
+  }
+}
+
+function updateObstacles() {
+  for (const o of obstacles) {
+    if (player.invuln > 0) continue;
+    const ob = {x:o.x, y:o.y, w:o.w, h:o.h};
+    if (aabb(player, ob)) {
+      const names = { pipeline:'Broken Pipeline', creds:'Expired Credentials',
+                      dns:'DNS Failure', rollback:'Rollback Trap' };
+      loseLife('Hit a ' + (names[o.type]||'hazard') + '.');
+    }
+  }
+}
+
+function updateBoss() {
+  const b = boss;
+  // patrol
+  b.x += b.speed * b.dir;
+  if (b.x < b.minX) { b.x = b.minX; b.dir = 1; }
+  if (b.x > b.maxX) { b.x = b.maxX; b.dir = -1; }
+
+  // throw "Production Incidents"
+  b.fireTimer--;
+  if (b.fireTimer <= 0) {
+    b.fireTimer = 80 - state.level*4; // a touch faster late game
+    const dir = player.x < b.x ? -1 : 1;
+    projectiles.push({
+      x:b.x + b.w/2, y:b.y + 20,
+      vx: dir * 3.4, vy:-2.5,
+      w:22, h:22, life:240,
+    });
+    Sound.throwInc();
+  }
+
+  // collisions with player
+  const bb = {x:b.x, y:b.y, w:b.w, h:b.h};
+  if (player.invuln <= 0 && aabb(player, bb)) {
+    const fromAbove = player.vy > 0 && (player.y + player.h) - b.y < 28;
+    if (fromAbove) {
+      b.hp--;
+      player.vy = JUMP_VELOCITY * 0.85;
+      Sound.boss();
+      state.shake = 12;
+      addScore(300);
+      spawnParticles(b.x+b.w/2, b.y, '#ffcc3f', 22, 4.5);
+      spawnFloatText(b.x, b.y, 'HIT! -1 HP');
+      player.invuln = 40; // brief grace so one stomp = one hit
+      if (b.hp <= 0) {
+        boss = null;
+        addScore(2000);
+        spawnParticles(bb.x+bb.w/2, bb.y+bb.h/2, '#2ee6a6', 50, 7);
+        spawnFloatText(bb.x, bb.y-20, 'BOSS DEFEATED +2000');
+      }
+    } else {
+      loseLife('Crushed by the Friday Evening Deployment.');
+    }
+  }
+}
+
+function updateProjectiles() {
+  for (const pr of projectiles) {
+    pr.vy += GRAVITY * 0.45;
+    pr.x += pr.vx;
+    pr.y += pr.vy;
+    pr.life--;
+    // bounce off ground a little
+    if (pr.y + pr.h > GROUND_Y) { pr.y = GROUND_Y - pr.h; pr.vy *= -0.5; pr.vx *= 0.8; }
+    if (player.invuln <= 0 && aabb(player, pr)) {
+      pr.life = 0;
+      loseLife('Hit by a Production Incident.');
+    }
+  }
+  projectiles = projectiles.filter(pr => pr.life > 0 && pr.x > -40 && pr.x < level.width+40);
+}
+
+// floating score text
+let floatTexts = [];
+function spawnFloatText(x, y, text) {
+  floatTexts.push({x, y, text, life:50});
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.vy += 0.18;
+    p.x += p.vx; p.y += p.vy;
+    p.life--;
+  }
+  particles = particles.filter(p => p.life > 0);
+  for (const f of floatTexts) { f.y -= 0.8; f.life--; }
+  floatTexts = floatTexts.filter(f => f.life > 0);
+}
+
+function updateCamera() {
+  // follow player, clamp to level bounds
+  const target = player.x + player.w/2 - VIEW_W/2;
+  state.camX += (target - state.camX) * 0.12;
+  state.camX = Math.max(0, Math.min(level.width - VIEW_W, state.camX));
+  state.camY = 0;
+}
+
+function checkGoal() {
+  // Boss level: goal only opens once the boss is gone
+  if (level.isBoss && boss) return;
+  if (player.x + player.w > level.goalX) {
+    if (level.isBoss) winGame();
+    else nextLevel();
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   9. RENDER LOGIC
+   ------------------------------------------------------------------------- */
+function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+function drawSpriteOrRect(img, x, y, w, h, color, topColor) {
+  if (img && img.__ready) {
+    ctx.drawImage(img, x, y, w, h);
+  } else {
+    // placeholder rectangle
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+    if (topColor) { ctx.fillStyle = topColor; ctx.fillRect(x, y, w, 5); }
+  }
+}
+
+function collectibleColor(type) {
+  return { 'PR Approval':'#ffcc3f','Jira Ticket':'#4aa3ff',
+           'Coffee Cup':'#8b5a2b','Green Build Badge':'#2ee6a6' }[type] || '#fff';
+}
+
+function render() {
+  const env = ENVIRONMENTS[level ? level.env : 0];
+  ctx.clearRect(0,0,VIEW_W,VIEW_H);
+
+  // screen shake
+  let sx = 0, sy = 0;
+  if (state.shake > 0) {
+    sx = (Math.random()-0.5)*state.shake;
+    sy = (Math.random()-0.5)*state.shake;
+  }
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  drawBackground(env);
+
+  ctx.save();
+  ctx.translate(-Math.round(state.camX), -Math.round(state.camY));
+
+  drawPlatforms(env);
+  drawObstacles();
+  drawCollectibles();
+  drawEnemies();
+  if (boss) drawBoss();
+  drawProjectiles();
+  drawGoal(env);
+  drawPlayer();
+  drawParticles();
+  drawFloatTexts();
+
+  ctx.restore();
+  ctx.restore();
+}
+
+/* ---- Parallax background: sky gradient, clouds, data centers, racks, CI/CD ---- */
+function drawBackground(env) {
+  // sky gradient
+  const g = ctx.createLinearGradient(0,0,0,VIEW_H);
+  g.addColorStop(0, env.sky1);
+  g.addColorStop(1, env.sky2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,VIEW_W,VIEW_H);
+
+  const t = state.time;
+
+  // --- far parallax: clouds (slow) ---
+  const cloudOff = (state.camX * 0.15) % 600;
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  for (let i=-1;i<4;i++){
+    const cx = i*600 - cloudOff + (t*0.1 % 600);
+    drawCloud(cx+120, 70, 1.0);
+    drawCloud(cx+380, 130, 0.7);
+  }
+
+  // --- mid parallax: data centers / building silhouettes ---
+  const midOff = (state.camX * 0.35) % 480;
+  for (let i=-1;i<5;i++){
+    const bx = i*480 - midOff;
+    drawDataCenter(bx+60, VIEW_H-150, 90, 150, env);
+    drawDataCenter(bx+260, VIEW_H-120, 70, 120, env);
+  }
+
+  // --- near parallax: server racks with blinking LEDs ---
+  const nearOff = (state.camX * 0.55) % 360;
+  for (let i=-1;i<6;i++){
+    const rx = i*360 - nearOff + 40;
+    drawServerRack(rx, VIEW_H-200, t);
+  }
+
+  // --- CI/CD pipeline ribbon flowing across the top ---
+  drawPipelineRibbon(t, env);
+}
+
+function drawCloud(x, y, s) {
+  ctx.beginPath();
+  ctx.arc(x, y, 22*s, 0, Math.PI*2);
+  ctx.arc(x+24*s, y+6*s, 28*s, 0, Math.PI*2);
+  ctx.arc(x+54*s, y, 22*s, 0, Math.PI*2);
+  ctx.arc(x+26*s, y-12*s, 22*s, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawDataCenter(x, y, w, h, env) {
+  ctx.fillStyle = 'rgba(10,20,40,0.55)';
+  ctx.fillRect(x, y, w, h);
+  // little windows that suggest racks
+  ctx.fillStyle = 'rgba(80,140,220,0.18)';
+  for (let yy=y+10; yy<y+h-10; yy+=18){
+    for (let xx=x+8; xx<x+w-8; xx+=16){
+      ctx.fillRect(xx, yy, 9, 10);
+    }
+  }
+}
+
+function drawServerRack(x, y, t) {
+  const w=46, h=140;
+  ctx.fillStyle = 'rgba(15,28,52,0.85)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(90,130,190,0.4)';
+  ctx.strokeRect(x, y, w, h);
+  // rack units with blinking LEDs
+  for (let i=0;i<7;i++){
+    const uy = y + 8 + i*18;
+    ctx.fillStyle = 'rgba(30,50,80,0.9)';
+    ctx.fillRect(x+5, uy, w-10, 12);
+    // blinking led
+    const on = ((t>>3) + i + (x|0)) % 5 < 2;
+    ctx.fillStyle = on ? '#2ee6a6' : '#0c5a40';
+    ctx.fillRect(x+9, uy+4, 4, 4);
+    ctx.fillStyle = ((t>>2)+i)%7<3 ? '#ffcc3f' : '#5a4a10';
+    ctx.fillRect(x+17, uy+4, 4, 4);
+  }
+}
+
+function drawPipelineRibbon(t, env) {
+  const y = 30;
+  ctx.strokeStyle = 'rgba(46,230,166,0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(VIEW_W, y);
+  ctx.stroke();
+  // flowing build packets
+  const stages = ['build','test','scan','deploy'];
+  for (let i=0;i<8;i++){
+    const px = ((t*1.6 + i*140) % (VIEW_W+120)) - 60;
+    ctx.fillStyle = 'rgba(46,230,166,0.6)';
+    ctx.fillRect(px, y-4, 8, 8);
+  }
+  ctx.lineWidth = 1;
+}
+
+function drawPlatforms(env) {
+  for (const plat of level.platforms) {
+    // ground vs floating platform styling
+    drawSpriteOrRect(null, plat.x, plat.y, plat.w, plat.h, env.plat, env.platTop);
+    // subtle grid/edge
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+    // label the floating platforms with the env name
+    if (plat.w <= 220) {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.font = 'bold 11px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(env.name + ' ▸', plat.x + plat.w/2, plat.y + 16);
+      ctx.textAlign = 'left';
+    }
+  }
+  // ground label tiles
+  const ground = level.platforms[0];
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.font = 'bold 13px Consolas, monospace';
+  for (let gx = Math.floor(state.camX/260)*260; gx < state.camX+VIEW_W; gx += 260){
+    ctx.fillText(env.name + ' Platform', gx+20, ground.y + 34);
+  }
+}
+
+function drawObstacles() {
+  for (const o of obstacles) {
+    const styles = {
+      pipeline: {c:'#ff5468', icon:'⛓'},
+      creds:    {c:'#ffcc3f', icon:'🔑'},
+      dns:      {c:'#4aa3ff', icon:'🌐'},
+      rollback: {c:'#ff7b00', icon:'⟲'},
+    };
+    const s = styles[o.type] || {c:'#999', icon:'!'};
+    // spinning hazard look
+    ctx.save();
+    ctx.translate(o.x + o.w/2, o.y + o.h/2);
+    ctx.rotate(Math.sin(state.time*0.05) * 0.4);
+    ctx.fillStyle = s.c;
+    ctx.fillRect(-o.w/2, -o.h/2, o.w, o.h);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.font = '16px Consolas, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(s.icon, 0, 1);
+    ctx.restore();
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  }
+}
+
+function drawCollectibles() {
+  for (const c of collectibles) {
+    if (c.collected) continue;
+    const yy = c.y + Math.sin(c.bob)*4;
+    const col = collectibleColor(c.type);
+    // glow
+    ctx.save();
+    ctx.shadowColor = col; ctx.shadowBlur = 12;
+    // TODO(assets): SPRITES.collectibles[c.type] image goes here
+    const img = SPRITES.collectibles[c.type];
+    if (img && img.__ready) {
+      ctx.drawImage(img, c.x, yy, 24, 24);
+    } else {
+      drawCollectibleIcon(c.type, c.x, yy, col);
+    }
+    ctx.restore();
+  }
+}
+
+function drawCollectibleIcon(type, x, y, col) {
+  ctx.fillStyle = col;
+  if (type === 'PR Approval') {
+    // circle with check
+    ctx.beginPath(); ctx.arc(x+12, y+12, 12, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#042018'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(x+6,y+12); ctx.lineTo(x+10,y+17); ctx.lineTo(x+18,y+7); ctx.stroke();
+    ctx.lineWidth=1;
+  } else if (type === 'Jira Ticket') {
+    ctx.fillRect(x, y+2, 24, 20);
+    ctx.fillStyle='#0d1830'; ctx.font='bold 10px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('JIRA', x+12, y+15); ctx.textAlign='left';
+  } else if (type === 'Coffee Cup') {
+    ctx.fillRect(x+3, y+6, 16, 16);          // cup
+    ctx.fillStyle='#8b5a2b'; ctx.fillRect(x+5, y+4, 12, 4);
+    ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x+22, y+13, 4, -1, 1.6); ctx.stroke(); ctx.lineWidth=1;
+    // steam
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.moveTo(x+8,y+2); ctx.quadraticCurveTo(x+11,y-2,x+8,y-5); ctx.stroke();
+  } else { // Green Build Badge
+    ctx.beginPath();
+    ctx.moveTo(x+12,y); ctx.lineTo(x+24,y+8); ctx.lineTo(x+20,y+24);
+    ctx.lineTo(x+4,y+24); ctx.lineTo(x,y+8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#042018'; ctx.font='bold 9px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('✓', x+12, y+16); ctx.textAlign='left';
+  }
+}
+
+function drawEnemies() {
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    const img = SPRITES.enemies[e.type];
+    // TODO(assets): SPRITES.enemies[e.type] image goes here
+    if (img && img.__ready) {
+      ctx.drawImage(img, e.x, e.y, 34, 34);
+    } else {
+      drawEnemyPlaceholder(e);
+    }
+  }
+}
+
+const ENEMY_STYLE = {
+  'Legacy Bug':                {c:'#ff5468', face:'🐛'},
+  'Merge Conflict':            {c:'#c44dff', face:'⚔'},
+  'Missing ENV Variable':      {c:'#ff9f43', face:'$?'},
+  'Database Migration Failure':{c:'#4aa3ff', face:'🗄'},
+  'QA Reopened Ticket':        {c:'#ff6b9d', face:'↩'},
+  '502 Gateway Error':         {c:'#e0e0e0', face:'502'},
+};
+function drawEnemyPlaceholder(e) {
+  const s = ENEMY_STYLE[e.type] || {c:'#ff5468', face:'!'};
+  const wob = Math.sin(state.time*0.15 + e.x*0.05)*2;
+  ctx.fillStyle = s.c;
+  ctx.fillRect(e.x, e.y + wob, 34, 34);
+  // eyes
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(e.x+6, e.y+8+wob, 8, 8);
+  ctx.fillRect(e.x+20, e.y+8+wob, 8, 8);
+  ctx.fillStyle = '#000';
+  const look = e.dir > 0 ? 3 : 0;
+  ctx.fillRect(e.x+8+look, e.y+11+wob, 3, 3);
+  ctx.fillRect(e.x+22+look, e.y+11+wob, 3, 3);
+  // label
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = 'bold 8px Consolas, monospace'; ctx.textAlign='center';
+  ctx.fillText(e.type, e.x+17, e.y - 4);
+  // tiny face glyph
+  ctx.font = '11px Consolas, monospace';
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillText(s.face, e.x+17, e.y+28+wob);
+  ctx.textAlign='left';
+}
+
+function drawBoss() {
+  const b = boss;
+  // TODO(assets): SPRITES.boss image goes here
+  if (SPRITES.boss && SPRITES.boss.__ready) {
+    ctx.drawImage(SPRITES.boss, b.x, b.y, b.w, b.h);
+  } else {
+    const pulse = Math.sin(state.time*0.1)*4;
+    ctx.fillStyle = '#b3122b';
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+    ctx.fillStyle = '#ff5468';
+    ctx.fillRect(b.x+4, b.y+4, b.w-8, 20);
+    // angry eyes
+    ctx.fillStyle = '#ffcc3f';
+    ctx.fillRect(b.x+14, b.y+34, 16, 14);
+    ctx.fillRect(b.x+b.w-30, b.y+34, 16, 14);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(b.x+20, b.y+40, 6, 6);
+    ctx.fillRect(b.x+b.w-26, b.y+40, 6, 6);
+    // mouth
+    ctx.fillStyle = '#000';
+    ctx.fillRect(b.x+18, b.y+64, b.w-36, 8+pulse*0.3);
+    // name + HP
+    ctx.fillStyle = '#fff'; ctx.font='bold 11px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('Friday Evening Deployment', b.x+b.w/2, b.y-22);
+  }
+  // HP bar (always, even with sprite)
+  const total = LEVELS[state.level].boss.hp;
+  ctx.fillStyle='rgba(0,0,0,0.6)';
+  ctx.fillRect(b.x-4, b.y-14, b.w+8, 7);
+  ctx.fillStyle='#2ee6a6';
+  ctx.fillRect(b.x-2, b.y-12, (b.w+4)*(b.hp/total), 3);
+  ctx.textAlign='left';
+}
+
+function drawProjectiles() {
+  for (const pr of projectiles) {
+    ctx.save();
+    ctx.translate(pr.x+pr.w/2, pr.y+pr.h/2);
+    ctx.rotate(state.time*0.2);
+    ctx.fillStyle = '#ff7b00';
+    ctx.fillRect(-pr.w/2, -pr.h/2, pr.w, pr.h);
+    ctx.fillStyle = '#fff'; ctx.font='bold 12px Consolas, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('!', 0, 1);
+    ctx.restore();
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    // label
+    ctx.fillStyle='rgba(255,123,0,0.9)'; ctx.font='7px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('Incident', pr.x+pr.w/2, pr.y-3); ctx.textAlign='left';
+  }
+}
+
+function drawGoal(env) {
+  const gx = level.goalX;
+  const open = !(level.isBoss && boss);
+  // TODO(assets): SPRITES.productionServer image goes here
+  if (SPRITES.productionServer && SPRITES.productionServer.__ready) {
+    ctx.drawImage(SPRITES.productionServer, gx, GROUND_Y-160, 110, 160);
+  } else {
+    // server tower
+    const x = gx, y = GROUND_Y-160, w=90, h=160;
+    ctx.fillStyle = open ? '#0e3a2c' : '#3a1414';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = open ? '#2ee6a6' : '#ff5468';
+    ctx.lineWidth=2; ctx.strokeRect(x, y, w, h); ctx.lineWidth=1;
+    // server units + LEDs
+    for (let i=0;i<8;i++){
+      const uy = y+10+i*18;
+      ctx.fillStyle='rgba(255,255,255,0.06)';
+      ctx.fillRect(x+6, uy, w-12, 12);
+      const on = ((state.time>>3)+i)%4<2;
+      ctx.fillStyle = open ? (on?'#2ee6a6':'#0c5a40') : '#ff5468';
+      ctx.fillRect(x+10, uy+4, 4, 4);
+    }
+    // flag pole + flag
+    ctx.fillStyle='#888'; ctx.fillRect(x+w-6, y-60, 4, 60);
+    ctx.fillStyle = open ? '#2ee6a6' : '#ff5468';
+    const wave = Math.sin(state.time*0.12)*4;
+    ctx.beginPath();
+    ctx.moveTo(x+w-2, y-60);
+    ctx.lineTo(x+w-2+34, y-52+wave);
+    ctx.lineTo(x+w-2, y-44);
+    ctx.fill();
+    // label
+    ctx.fillStyle = open ? '#2ee6a6' : '#ff5468';
+    ctx.font='bold 12px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('PRODUCTION', x+w/2, y-66);
+    ctx.fillText('SERVER', x+w/2, y-2+h*0+ h+14);
+    if (level.isBoss && boss) {
+      ctx.fillStyle='#ff5468'; ctx.font='10px Consolas, monospace';
+      ctx.fillText('🔒 defeat the boss', x+w/2, y+h+28);
+    }
+    ctx.textAlign='left';
+  }
+}
+
+function drawPlayer() {
+  const p = player;
+  // flicker while invulnerable
+  if (p.invuln > 0 && (state.time>>2)%2===0) return;
+
+  // TODO(assets): SPRITES.player image goes here (use p.facing for flip)
+  if (SPRITES.player && SPRITES.player.__ready) {
+    const img = SPRITES.player;
+    // Preserve the image's native aspect ratio so Devanshu isn't squeezed.
+    // Match the hitbox height, scale width accordingly, then center the
+    // sprite horizontally on the hitbox and bottom-align the feet.
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const drawH = p.h;
+    const drawW = drawH * ratio;
+    const drawX = p.x + p.w/2 - drawW/2;
+    const drawY = p.y + p.h - drawH;
+    ctx.save();
+    if (p.facing < 0) {
+      ctx.translate(drawX + drawW, drawY); ctx.scale(-1,1);
+      ctx.drawImage(img, 0, 0, drawW, drawH);
+    } else {
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+    }
+    ctx.restore();
+    return;
+  }
+
+  // ----- placeholder: a little engineer rectangle with a hard hat & laptop -----
+  const x = p.x, y = p.y;
+  const bobLeg = p.onGround ? Math.sin(p.animTime)*3 : 0;
+
+  // legs
+  ctx.fillStyle = '#26406b';
+  ctx.fillRect(x+4, y+30+ (bobLeg>0?bobLeg:0), 8, 12);
+  ctx.fillRect(x+18, y+30+ (bobLeg<0?-bobLeg:0), 8, 12);
+  // body / hoodie
+  ctx.fillStyle = '#2ee6a6';
+  ctx.fillRect(x+2, y+14, 26, 18);
+  // laptop badge on chest
+  ctx.fillStyle = '#0d1830';
+  ctx.fillRect(x+9, y+19, 12, 8);
+  ctx.fillStyle = '#7af0cb';
+  ctx.fillRect(x+10, y+20, 10, 5);
+  // head
+  ctx.fillStyle = '#f2c79b';
+  ctx.fillRect(x+6, y+2, 18, 14);
+  // hard hat
+  ctx.fillStyle = '#ffcc3f';
+  ctx.fillRect(x+4, y, 22, 6);
+  ctx.fillRect(x+8, y-4, 14, 5);
+  // eyes (face direction)
+  ctx.fillStyle = '#0d1830';
+  const ex = p.facing > 0 ? x+16 : x+9;
+  ctx.fillRect(ex, y+8, 3, 3);
+  ctx.fillRect(ex+5, y+8, 3, 3);
+  // name tag
+  ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.font='bold 9px Consolas, monospace'; ctx.textAlign='center';
+  ctx.fillText('Devanshu', x+15, y-8); ctx.textAlign='left';
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.globalAlpha = clamp01(p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawFloatTexts() {
+  ctx.font = 'bold 13px Consolas, monospace';
+  ctx.textAlign = 'center';
+  for (const f of floatTexts) {
+    ctx.globalAlpha = clamp01(f.life/50);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+}
+
+/* ---------------------------------------------------------------------------
+   MENU / IDLE BACKGROUND (when not yet playing, draw a calm scene)
+   ------------------------------------------------------------------------- */
+function renderIdle() {
+  // a gentle animated backdrop behind the start menu
+  const env = ENVIRONMENTS[0];
+  ctx.clearRect(0,0,VIEW_W,VIEW_H);
+  const g = ctx.createLinearGradient(0,0,0,VIEW_H);
+  g.addColorStop(0, env.sky1); g.addColorStop(1, env.sky2);
+  ctx.fillStyle = g; ctx.fillRect(0,0,VIEW_W,VIEW_H);
+  const t = state.time;
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  for (let i=0;i<4;i++) drawCloud(((t*0.3)+(i*260))%1100-100, 80+i*30, 0.9-i*0.1);
+  for (let i=0;i<5;i++) drawServerRack(60+i*200, VIEW_H-200, t);
+  drawPipelineRibbon(t, env);
+}
+
+/* ---------------------------------------------------------------------------
+   MAIN LOOP — fixed timestep accumulator for steady 60 FPS physics
+   ------------------------------------------------------------------------- */
+let lastTime = performance.now();
+let accumulator = 0;
+const STEP = 1000/60;
+
+function frame(now) {
+  let dt = now - lastTime;
+  lastTime = now;
+  if (dt > 100) dt = 100; // avoid spiral after tab switch
+  accumulator += dt;
+  while (accumulator >= STEP) {
+    update();
+    accumulator -= STEP;
+  }
+  // render
+  if (state.phase === PHASE.MENU) renderIdle();
+  else if (level) render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---------------------------------------------------------------------------
+   RESPONSIVE CANVAS — keep 16:9 internal res, scale to fit viewport
+   ------------------------------------------------------------------------- */
+function resize() {
+  const wrap = document.getElementById('wrap');
+  const aspect = VIEW_W / VIEW_H;
+  let w = wrap.clientWidth, h = wrap.clientHeight;
+  if (w / h > aspect) w = h * aspect; else h = w / aspect;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+// initialize HUD best display
+dom.best.textContent = state.best;
+</script>
+</body>
+</html>
