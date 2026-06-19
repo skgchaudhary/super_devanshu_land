@@ -157,7 +157,7 @@
   /* ---------- Credit line ---------- */
   #credit {
     position: absolute;
-    top: 6px;
+    bottom: 6px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 25;
@@ -187,12 +187,12 @@
     filter: none; opacity: 1;
   }
   #rescueCast .cast img {
-    width: clamp(74px, 16vw, 130px);
-    height: clamp(74px, 16vw, 130px);
-    object-fit: cover;
+    width: clamp(96px, 19vw, 170px);
+    height: clamp(130px, 26vh, 240px);
+    object-fit: contain;            /* show the whole character, no cropping */
     border-radius: 14px;
     border: 2px solid rgba(46,230,166,0.35);
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.25);
     box-shadow: 0 8px 22px rgba(0,0,0,0.5);
   }
   #rescueCast .cast.active img {
@@ -220,6 +220,166 @@
     margin: 0; color:#eaf2ff; font-size: clamp(14px,2.2vw,19px); line-height:1.5; font-style: italic;
   }
 
+  /* ---------- Twist ending (cinematic) ---------- */
+  #twistScreen.twist {
+    background: #000;
+    overflow: hidden;
+    transition: background 1s ease;
+  }
+  #twistSkip {
+    position: absolute; top: 14px; right: 18px;
+    font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 1px;
+    pointer-events: none;
+  }
+  #twistShake { position: relative; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #twistShake.shaking { animation: twShake 0.25s linear infinite; }
+  @keyframes twShake {
+    0%,100% { transform: translate(0,0); }
+    25% { transform: translate(-6px, 3px); }
+    50% { transform: translate(5px, -4px); }
+    75% { transform: translate(-3px, -3px); }
+  }
+
+  /* Slack notification toasts */
+  #slackStack {
+    position: absolute; top: 8%; right: 6%;
+    display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
+    width: min(360px, 80vw);
+  }
+  .slack-toast {
+    width: 100%;
+    background: #1a1d29;
+    border-left: 4px solid #e01e5a;
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    animation: slackIn 0.4s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .slack-toast .app { font-size: 11px; color:#9aa3b2; display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  .slack-toast .app b { color:#e8eaf0; }
+  .slack-toast .msg { font-size: clamp(13px,2vw,16px); font-weight: 800; color:#ff5468; letter-spacing:0.3px; }
+  @keyframes slackIn {
+    from { transform: translateX(60px) scale(0.96); opacity: 0; }
+    to   { transform: translateX(0) scale(1); opacity: 1; }
+  }
+
+  /* Monday Morning Incident monster */
+  .tw-hidden { display: none; }
+  #twistVillain { display: flex; flex-direction: column; align-items: center; }
+  #twistVillain.show { display: flex; animation: rise 1.1s cubic-bezier(.18,.7,.2,1) both; }
+  .mmi {
+    position: relative;
+    width: clamp(180px, 40vw, 300px);
+    height: clamp(150px, 32vw, 240px);
+    background: radial-gradient(ellipse at 50% 30%, #2a0a0f 0%, #120307 60%, #000 100%);
+    border-radius: 48% 48% 42% 42% / 60% 60% 40% 40%;
+    box-shadow: 0 0 70px 14px rgba(224,30,90,0.35), inset 0 -20px 50px rgba(0,0,0,0.8);
+  }
+  .mmi-eye {
+    position: absolute; top: 34%;
+    width: 16%; height: 13%;
+    background: #ff2d4f; border-radius: 50%;
+    box-shadow: 0 0 22px 6px rgba(255,45,79,0.9);
+    animation: eyeGlow 1.6s ease-in-out infinite;
+  }
+  .mmi-eye.left  { left: 24%; transform: rotate(-12deg); }
+  .mmi-eye.right { right: 24%; transform: rotate(12deg); }
+  @keyframes eyeGlow { 0%,100%{opacity:1;} 50%{opacity:0.55;} }
+  .mmi-mouth {
+    position: absolute; bottom: 22%; left: 50%; transform: translateX(-50%);
+    width: 46%; height: 10%;
+    background: #000;
+    border-radius: 0 0 40% 40%;
+    box-shadow: inset 0 4px 8px rgba(255,45,79,0.5);
+  }
+  .mmi-name {
+    margin-top: 18px;
+    font-size: clamp(22px, 5.5vw, 50px);
+    font-weight: 900; letter-spacing: 3px;
+    color: #ff2d4f;
+    text-shadow: 0 0 24px rgba(255,45,79,0.7);
+  }
+  .mmi-line {
+    margin-top: 10px; font-style: italic;
+    font-size: clamp(14px, 2.6vw, 22px); color:#e8eaf0;
+    opacity: 0; animation: fadeUp 0.8s ease 0.5s both;
+  }
+
+  /* Sequel title card */
+  #twistTitle { text-align: center; }
+  #twistTitle.show { display: block; animation: titlePop 1s cubic-bezier(.2,.9,.2,1) both; }
+  #twistTitle .t-sub { font-size: clamp(11px,2vw,15px); letter-spacing: 6px; color:#9fb2d0; margin-bottom: 8px; }
+  #twistTitle .t-main {
+    font-size: clamp(28px, 7vw, 66px); font-weight: 900; letter-spacing: 2px;
+    color: var(--accent2);
+    text-shadow: 0 0 30px rgba(255,204,63,0.45);
+  }
+  #twistTitle .t-era {
+    margin-top: 6px; font-size: clamp(14px, 3vw, 26px); font-weight: 700; letter-spacing: 4px;
+    color: #ff5468; text-shadow: 0 0 18px rgba(255,84,104,0.4);
+  }
+  @keyframes titlePop { from{ transform: scale(1.35); opacity:0; filter:blur(8px);} to{ transform: scale(1); opacity:1; filter:blur(0);} }
+
+  /* Final quote */
+  #twistQuote { text-align: center; max-width: 640px; }
+  #twistQuote.show { display: block; animation: fadeUp 1.1s ease both; }
+  #twistQuote p {
+    font-size: clamp(16px, 3vw, 26px); line-height: 1.5; color:#eaf2ff;
+    font-style: italic; margin-bottom: 22px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  }
+  @keyframes rise   { from{ transform: translateY(28vh) scale(0.85); opacity:0; } to{ transform: translateY(0) scale(1); opacity:1; } }
+  @keyframes fadeUp { from{ transform: translateY(16px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+
+  /* ---------- Outro ("Directed by Robert B. Weide" homage) ---------- */
+  #outroScreen.outro {
+    background: #000;
+    flex-direction: column;
+    gap: 26px;
+  }
+  #outroText {
+    font-family: "Times New Roman", Georgia, serif;
+    color: #efefef;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    /* black for a beat, then fade in slowly like the meme */
+    animation: weideFade 2.4s ease 0.6s forwards;
+  }
+  #outroText .outro-label {
+    font-weight: 400;
+    font-size: clamp(20px, 3.6vw, 38px);
+    letter-spacing: 0.5px;
+  }
+  #outroText .outro-name {
+    font-weight: 400;
+    font-size: clamp(30px, 6.4vw, 66px);
+    letter-spacing: 1px;
+  }
+  #outroLink {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(13px, 2.2vw, 18px);
+    color: #8fb6ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(143,182,255,0.4);
+    opacity: 0;
+    pointer-events: none;                 /* enabled once it has faded in */
+    animation: weideFade 1.4s ease 2.6s forwards;
+  }
+  #outroLink.lit { pointer-events: auto; }
+  #outroLink:hover { color: #bcd4ff; }
+  #outroScreen .btn {
+    margin-top: 18px;
+    opacity: 0;
+    animation: weideFade 1.2s ease 3.4s forwards;
+  }
+  @keyframes weideFade { from { opacity: 0; } to { opacity: 1; } }
+
   /* ---------- Touch controls ---------- */
   #touch {
     position: absolute; inset: 0; z-index: 15; pointer-events: none;
@@ -240,6 +400,7 @@
   #btnLeft  { left: 20px; }
   #btnRight { left: 110px; }
   #btnJump  { right: 24px; background: rgba(255,204,63,0.16); border-color: rgba(255,204,63,0.55); }
+  #btnShoot { right: 110px; font-size: 26px; background: rgba(122,240,203,0.16); border-color: rgba(46,230,166,0.6); }
   #touch.show { /* only enabled on touch devices via JS */ }
   .hide { display: none !important; }
 </style>
@@ -257,6 +418,7 @@
     <div class="pill">⭐ Story Points: <span id="hudScore">0</span></div>
     <div class="pill">🏆 Best: <span id="hudBest">0</span></div>
     <div class="pill"><img src="assets/wada_pav.png" alt="wada pav" class="hud-icon"> <span id="hudWada">0/3</span></div>
+    <div class="pill">🔧 Hotfix: <span id="hudHotfix">0</span>/3</div>
     <div class="spacer"></div>
     <div class="pill" id="hudStage">Localhost</div>
     <div id="pauseBtn">⏸ Pause</div>
@@ -281,11 +443,12 @@
       <span><i class="swatch" style="background:#ff5468"></i>Enemy / Bug</span>
     </div>
     <p style="font-size:14px;color:var(--accent)">
-      🍴 Collect <b>3 Wada Pavs</b> to earn a <b>1-UP</b> (extra life)!
+      🍴 Collect <b>3 Wada Pavs</b> to earn a <b>1-UP</b> (extra life)!<br>
+      🔧 Grab <b>Coffee</b> &amp; <b>PagerDuty</b> for <b>Emergency Hotfixes</b> — press <b>X</b> to shoot bugs (max 3)!
     </p>
     <p style="font-size:13px;color:#8aa">
-      <b>Desktop:</b> ← → / A D to move · ↑ / W / Space to jump · P to pause<br>
-      <b>Mobile:</b> on-screen buttons
+      <b>Desktop:</b> ← → / A D to move · ↑ / W / Space to jump · <b>X</b> to shoot · P to pause<br>
+      <b>Mobile:</b> on-screen buttons (🔧 = hotfix)
     </p>
     <button class="btn" id="startBtn">▶ Start Deployment</button>
   </div>
@@ -343,13 +506,61 @@
       Stakeholders: <span style="color:var(--accent)">HAPPY</span>
     </p>
     <p>Final Story Points: <b id="winScore">0</b> &nbsp;·&nbsp; Best: <b id="winBest">0</b></p>
-    <button class="btn" id="playAgainBtn">▶ Deploy Again</button>
+    <button class="btn" id="continueBtn">▸ Continue…</button>
+    <button class="btn secondary" id="playAgainBtn">↺ Deploy Again</button>
   </div>
+
+  <!-- ============ TWIST ENDING (cinematic) ============ -->
+  <div id="twistScreen" class="overlay hidden twist">
+    <div id="twistSkip">click / tap to skip ⏩</div>
+    <div id="twistShake">
+      <!-- Slack notifications stack -->
+      <div id="slackStack"></div>
+
+      <!-- The villain reveal -->
+      <div id="twistVillain" class="tw-hidden">
+        <div class="mmi">
+          <div class="mmi-eye left"></div>
+          <div class="mmi-eye right"></div>
+          <div class="mmi-mouth"></div>
+        </div>
+        <div class="mmi-name">MONDAY MORNING INCIDENT</div>
+        <div class="mmi-line">"It worked in Stage."</div>
+      </div>
+
+      <!-- Sequel title card -->
+      <div id="twistTitle" class="tw-hidden">
+        <div class="t-sub">COMING SOON</div>
+        <div class="t-main">SUPER DEVANSHU LAND&nbsp;2</div>
+        <div class="t-era">THE POST-PRODUCTION SUPPORT ERA</div>
+      </div>
+
+      <!-- Final quote + next -->
+      <div id="twistQuote" class="tw-hidden">
+        <p>"You don't deploy into Production.<br>Production deploys into <i>you</i>."</p>
+        <button class="btn" id="twistNextBtn">Next ▸</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OUTRO ("Directed by Robert B. Weide" homage) ============ -->
+  <div id="outroScreen" class="overlay hidden outro">
+    <div id="outroText">
+      <span class="outro-label">Developed By</span>
+      <span class="outro-name">Suneet&nbsp;Chaudhary</span>
+    </div>
+    <a id="outroLink" href="https://www.linkedin.com/in/suneetchaudhary/" target="_blank" rel="noopener noreferrer">
+      linkedin.com/in/suneetchaudhary
+    </a>
+    <button class="btn" id="outroRestartBtn">↺ Restart</button>
+  </div>
+  <audio id="weideAudio" src="assets/Directed by Robert B. Weide.mp3" loop preload="auto"></audio>
 
   <!-- ============ TOUCH CONTROLS ============ -->
   <div id="touch">
     <div class="tbtn" id="btnLeft">◀</div>
     <div class="tbtn" id="btnRight">▶</div>
+    <div class="tbtn" id="btnShoot">🔧</div>
     <div class="tbtn" id="btnJump">▲</div>
   </div>
 </div>
@@ -383,11 +594,12 @@ const GRAVITY = 0.62;
 const MOVE_ACCEL = 0.85;
 const MAX_SPEED = 4.6;
 const FRICTION = 0.80;
-const JUMP_VELOCITY = -12.6;
+const JUMP_VELOCITY = -14.5;   // ~150px max rise — clears UAT (130px) & STAGE (140px) platforms
 const TILE = 40;                            // logical tile size for layout
+const HOTFIX_MAX = 3;                       // max Emergency Hotfix ammo carried
 
 // Game phases
-const PHASE = { MENU:'menu', PLAY:'play', PAUSE:'pause', OVER:'over', WIN:'win', RESCUE:'rescue', TRANSITION:'transition' };
+const PHASE = { MENU:'menu', PLAY:'play', PAUSE:'pause', OVER:'over', WIN:'win', RESCUE:'rescue', TWIST:'twist', OUTRO:'outro', TRANSITION:'transition' };
 
 let state = {
   phase: PHASE.MENU,
@@ -395,6 +607,7 @@ let state = {
   score: 0,
   lives: 3,
   wadaPav: 0,        // wada pavs collected toward the next 1-UP (every 3)
+  hotfix: 1,         // Emergency Hotfix ammo (max HOTFIX_MAX)
   best: Number(localStorage.getItem('devanshu_best') || 0),
   camX: 0,
   camY: 0,
@@ -493,13 +706,18 @@ const Sound = (() => {
     lose()   { [400,300,200,120].forEach((f,i)=>setTimeout(()=>tone(f,0.22,'sawtooth',0.2),i*130)); },
     level()  { [659,880].forEach((f,i)=>setTimeout(()=>tone(f,0.14,'triangle',0.16),i*110)); },
     throwInc(){ tone(640, 0.18, 'sawtooth', 0.16, 180); },
+    shoot()  { tone(1000, 0.10, 'square', 0.13, 460); },
+    reload() { tone(700, 0.08, 'triangle', 0.14, 1100); setTimeout(()=>tone(1100,0.10,'triangle',0.12),70); },
+    empty()  { tone(160, 0.12, 'sawtooth', 0.12, 120); },
+    slack()  { tone(660, 0.07, 'sine', 0.16, 990); setTimeout(()=>tone(880,0.09,'sine',0.14),70); }, // notification ping
+    doom()   { tone(70, 0.9, 'sawtooth', 0.28, 40); setTimeout(()=>tone(55,1.1,'sawtooth',0.24,30),120); }, // monster reveal
   };
 })();
 
 /* ---------------------------------------------------------------------------
    4. INPUT — keyboard + touch
    ------------------------------------------------------------------------- */
-const input = { left:false, right:false, jump:false, jumpHeld:false };
+const input = { left:false, right:false, jump:false, jumpHeld:false, shoot:false };
 
 const keymap = {
   ArrowLeft:'left', KeyA:'left',
@@ -508,6 +726,7 @@ const keymap = {
 };
 window.addEventListener('keydown', e => {
   if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyX') { input.shoot = true; e.preventDefault(); return; } // Emergency Hotfix
   const a = keymap[e.code];
   if (a) {
     if (a === 'jump' && !input.jumpHeld) input.jump = true;
@@ -541,6 +760,7 @@ bindTouch('btnLeft',  () => input.left = true,  () => input.left = false);
 bindTouch('btnRight', () => input.right = true, () => input.right = false);
 bindTouch('btnJump',  () => { if (!input.jumpHeld){input.jump=true;} input.jumpHeld=true; },
                       () => input.jumpHeld = false);
+bindTouch('btnShoot', () => input.shoot = true, () => {});
 
 // Show touch controls only when a touch device is detected
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -555,8 +775,10 @@ if (!isTouch) document.getElementById('touch').classList.add('hide');
 ------------------------------------------------------------------------- */
 const ENEMY_TYPES = ['Legacy Bug','Merge Conflict','Missing ENV Variable',
                      'Database Migration Failure','QA Reopened Ticket','502 Gateway Error'];
-const COLLECTIBLE_TYPES = ['PR Approval','Jira Ticket','Coffee Cup','Green Build Badge'];
-const COLLECTIBLE_POINTS = { 'PR Approval':150,'Jira Ticket':75,'Coffee Cup':50,'Green Build Badge':250 };
+const COLLECTIBLE_TYPES = ['PR Approval','Jira Ticket','Coffee Cup','Green Build Badge','Coffee','PagerDuty'];
+const COLLECTIBLE_POINTS = { 'PR Approval':150,'Jira Ticket':75,'Coffee Cup':50,'Green Build Badge':250,'Coffee':25,'PagerDuty':40 };
+// Pickups that refill Emergency Hotfix ammo instead of being plain points.
+const AMMO_TYPES = new Set(['Coffee','PagerDuty']);
 
 // Environment palettes & labels
 const ENVIRONMENTS = [
@@ -598,6 +820,7 @@ const LEVELS = [
       C(1700,300,'Coffee Cup'), C(1760,300,'PR Approval'),
       C(2090,250,'Jira Ticket'), C(2400,200,'Green Build Badge'),
       C(2650,420,'Coffee Cup'),
+      C(680,240,'Coffee'), C(1660,310,'PagerDuty'),
     ],
     enemies: [
       E(900, 820, 1140, 'Legacy Bug', 1.0),
@@ -631,6 +854,7 @@ const LEVELS = [
       C(1870,280,'PR Approval'), C(2180,220,'Coffee Cup'),
       C(2500,160,'Green Build Badge'), C(2820,270,'Jira Ticket'),
       C(3000,420,'PR Approval'),
+      C(640,200,'Coffee'), C(1840,250,'PagerDuty'),
     ],
     enemies: [
       E(700, 600, 980, 'Missing ENV Variable', 1.3),
@@ -668,6 +892,7 @@ const LEVELS = [
       C(2340,270,'Jira Ticket'), C(2660,200,'Coffee Cup'),
       C(2960,150,'Green Build Badge'), C(3240,270,'PR Approval'),
       C(3360,420,'Jira Ticket'),
+      C(900,210,'PagerDuty'), C(2500,200,'Coffee'),
     ],
     enemies: [
       E(750, 600, 940, 'QA Reopened Ticket', 1.5),
@@ -708,6 +933,7 @@ const LEVELS = [
       C(2260,160,'Green Build Badge'), C(2560,250,'Coffee Cup'),
       C(2860,180,'PR Approval'), C(3160,250,'Jira Ticket'),
       C(3440,170,'Green Build Badge'),
+      C(820,250,'Coffee'), C(2000,200,'PagerDuty'), C(3000,420,'Coffee'),
     ],
     enemies: [
       E(700, 560, 880, '502 Gateway Error', 1.6),
@@ -736,6 +962,7 @@ const LEVELS = [
     collectibles: [
       C(330,300,'Coffee Cup'), C(840,240,'Green Build Badge'),
       C(1450,300,'Coffee Cup'),
+      C(250,300,'PagerDuty'), C(1500,300,'Coffee'),
     ],
     enemies: [],
     obstacles: [],
@@ -761,7 +988,25 @@ let enemies = [];
 let obstacles = [];
 let boss = null;
 let projectiles = []; // boss "Production Incidents"
+let hotfixes = [];    // player "Emergency Hotfix" projectiles
 let particles = [];
+
+// Build a live enemy from a level definition, adding hotfix-related state.
+// Database Migration Failure takes 2 hits; everything else 1. gen/scale support
+// the Merge Conflict "splits into two smaller conflicts" behaviour.
+function makeEnemy(def) {
+  const hp = def.type === 'Database Migration Failure' ? 2 : 1;
+  return {
+    ...def,
+    alive: true, dir: 1,
+    w: def.w || 34, h: def.h || 34,
+    hp, maxHp: hp,
+    gen: def.gen || 0,          // 0 = original, 1 = split child
+    homeX: def.x,               // for QA Reopened Ticket respawn
+    respawnTimer: 0,
+    hurtFlash: 0,
+  };
+}
 
 // Particle burst
 function spawnParticles(x, y, color, count=10, spread=3.2) {
@@ -787,6 +1032,7 @@ const dom = {
   score: document.getElementById('hudScore'),
   best: document.getElementById('hudBest'),
   wada: document.getElementById('hudWada'),
+  hotfix: document.getElementById('hudHotfix'),
   stage: document.getElementById('hudStage'),
   banner: document.getElementById('stageBanner'),
   start: document.getElementById('startScreen'),
@@ -804,14 +1050,16 @@ function loadLevel(idx) {
   level = LEVELS[idx];
   // deep-ish copies so collected/alive flags reset each load
   collectibles = level.collectibles.map(c => ({...c, collected:false, bob:Math.random()*Math.PI*2}));
-  enemies = level.enemies.map(e => ({...e, alive:true, dir:1}));
+  enemies = level.enemies.map(e => makeEnemy(e));
   obstacles = level.obstacles.map(o => ({...o}));
   boss = level.boss ? {...level.boss, fireTimer:90} : null;
   projectiles = [];
+  hotfixes = [];
   particles = [];
   // place player at the start
   player.x = 80; player.y = GROUND_Y - player.h;
   player.vx = 0; player.vy = 0; player.invuln = 60;
+  input.shoot = false; input.jump = false;
   state.camX = 0; state.camY = 0;
   updateHUD();
   showBanner(ENVIRONMENTS[level.env].name, ENVIRONMENTS[level.env].tag);
@@ -822,7 +1070,11 @@ function startGame() {
   state.score = 0;
   state.lives = 3;
   state.wadaPav = 0;
+  state.hotfix = 1;
+  twistTimers.forEach(clearTimeout); twistTimers = [];
+  stopWeide();
   hide(dom.start); hide(dom.pause); hide(dom.over); hide(dom.win);
+  hide(dom.rescue); hide(twistEl.screen); hide(document.getElementById('outroScreen'));
   show(dom.hud);
   loadLevel(0);
 }
@@ -887,10 +1139,10 @@ function saveBest() {
    Plays after the Friday Evening Deployment boss falls, then flows into the
    win screen. `role` highlights the matching portrait (Kunal/Vidya/Justin). */
 const RESCUE_SCRIPT = [
-  { role:null, speaker:'Production Datacenter', line:'The Change Freeze Shield shatters. Three figures step into the light…' },
-  { role:'BA', speaker:'Kunal (BA)',  line:'"The requirements changed 17 times. Yet somehow you understood all of them."' },
-  { role:'PM', speaker:'Vidya (PM)',  line:'"The timeline was impossible. Yet somehow you delivered."' },
-  { role:'PO', speaker:'Justin (PO)', line:'"There is one more feature."' },
+  { role:null, speaker:'Production Datacenter', line:'🔥 Devanshu! You defeated Friday Evening Deployment, shattered the Change Freeze, and rescued the three souls of the project. Production stands victorious! 🚀' },
+  { role:'BA', speaker:'Kunal (BA)',  line:'The requirements changed 17 times. Scope shifted, priorities evolved, and chaos reigned. Yet somehow, you understood it all and delivered. Devanshu, you are a true hero of this deployment.' },
+  { role:'PM', speaker:'Vidya (PM)',  line:'The timeline was impossible. The odds were worse. Yet somehow, Devanshu delivered when it mattered most.' },
+  { role:'PO', speaker:'Justin (PO)', line:'Excellent work, Devanshu! Now then... there\'s just one tiny feature left. Hahaha! Ready for another deployment?' },
   { role:null, speaker:'Devanshu',    line:'"No."' },
   { role:'PO', speaker:'Justin (PO)', line:'"Fair."' },
 ];
@@ -933,6 +1185,123 @@ function advanceRescue() {
   }
 }
 
+/* ---- Christopher-Nolan-style twist ending ----------------------------------
+   Plays after the celebration: fade to black, Slack incidents pile in, the
+   screen shakes, MONDAY MORNING INCIDENT rises, drops its line, the sequel
+   title card lands, then the final quote. Click/tap skips to the end. */
+const twistEl = {
+  screen: document.getElementById('twistScreen'),
+  shake: document.getElementById('twistShake'),
+  stack: document.getElementById('slackStack'),
+  villain: document.getElementById('twistVillain'),
+  title: document.getElementById('twistTitle'),
+  quote: document.getElementById('twistQuote'),
+};
+const SLACK_INCIDENTS = [
+  'P1 INCIDENT — PRODUCTION DOWN',
+  'URGENT CLIENT ESCALATION',
+  'ROOT CAUSE UNKNOWN',
+];
+let twistTimers = [];
+let twistFinished = false;
+function tw(delay, fn) { twistTimers.push(setTimeout(fn, delay)); }
+
+function startTwist() {
+  state.phase = PHASE.TWIST;
+  twistFinished = false;
+  twistTimers = [];
+  // reset cutscene to its initial state
+  twistEl.stack.innerHTML = '';
+  twistEl.shake.classList.remove('shaking');
+  twistEl.villain.className = 'tw-hidden';
+  twistEl.title.className = 'tw-hidden';
+  twistEl.quote.className = 'tw-hidden';
+  hide(dom.win);
+  show(twistEl.screen);
+
+  // 1) Slack notifications slide in one by one
+  SLACK_INCIDENTS.forEach((msg, i) => {
+    tw(700 + i * 1000, () => {
+      const t = document.createElement('div');
+      t.className = 'slack-toast';
+      t.innerHTML = '<div class="app">💬 <b>Slack</b> · #production-incidents</div>' +
+                    '<div class="msg">' + msg + '</div>';
+      twistEl.stack.appendChild(t);
+      Sound.slack();
+    });
+  });
+
+  // 2) Screen shakes
+  tw(3500, () => twistEl.shake.classList.add('shaking'));
+
+  // 3) The monster rises and reveals
+  tw(4100, () => {
+    twistEl.villain.classList.remove('tw-hidden');
+    twistEl.villain.classList.add('show');
+    Sound.doom();
+  });
+
+  // 4) Shaking eases off after the reveal settles
+  tw(6200, () => twistEl.shake.classList.remove('shaking'));
+
+  // 5) Cut from the monster to the sequel title card
+  tw(6800, () => {
+    twistEl.villain.className = 'tw-hidden';
+    twistEl.title.classList.remove('tw-hidden');
+    twistEl.title.classList.add('show');
+    Sound.level();
+  });
+
+  // 6) Final quote + restart button
+  tw(8400, finishTwist);
+}
+
+function finishTwist() {
+  if (twistFinished) return;
+  twistFinished = true;
+  twistTimers.forEach(clearTimeout);
+  twistTimers = [];
+  twistEl.shake.classList.remove('shaking');
+  // ensure everything is visible (covers the skip case)
+  if (!twistEl.stack.childElementCount) {
+    SLACK_INCIDENTS.forEach(msg => {
+      const t = document.createElement('div');
+      t.className = 'slack-toast';
+      t.innerHTML = '<div class="app">💬 <b>Slack</b> · #production-incidents</div>' +
+                    '<div class="msg">' + msg + '</div>';
+      twistEl.stack.appendChild(t);
+    });
+  }
+  // final state: title card + quote (the monster has cut away, movie-style)
+  twistEl.villain.className = 'tw-hidden';
+  twistEl.title.classList.remove('tw-hidden');   twistEl.title.classList.add('show');
+  twistEl.quote.classList.remove('tw-hidden');   twistEl.quote.classList.add('show');
+}
+
+function skipTwist() {
+  if (state.phase !== PHASE.TWIST) return;
+  if (!twistFinished) finishTwist();
+}
+
+/* ---- Outro: black screen, "Developed by Suneet Chaudhary" fades in over a
+   looping music bed (a nod to "Directed by Robert B. Weide"). ---- */
+const weideAudio = document.getElementById('weideAudio');
+const outroLink = document.getElementById('outroLink');
+function showOutro() {
+  state.phase = PHASE.OUTRO;
+  twistTimers.forEach(clearTimeout); twistTimers = [];
+  hide(twistEl.screen);
+  show(document.getElementById('outroScreen'));
+  // enable the link only once it has faded in (matches its animation delay)
+  outroLink.classList.remove('lit');
+  setTimeout(() => outroLink.classList.add('lit'), 2600);
+  // loop the track in the background
+  try { weideAudio.currentTime = 0; weideAudio.volume = 0.75; weideAudio.play(); } catch (e) {}
+}
+function stopWeide() {
+  try { weideAudio.pause(); weideAudio.currentTime = 0; } catch (e) {}
+}
+
 function togglePause() {
   if (state.phase === PHASE.PLAY) {
     state.phase = PHASE.PAUSE;
@@ -954,6 +1323,7 @@ function updateHUD() {
   dom.score.textContent = state.score;
   dom.best.textContent = state.best;
   dom.wada.textContent = state.wadaPav + '/3';
+  dom.hotfix.textContent = state.hotfix;
   if (level) dom.stage.textContent = ENVIRONMENTS[level.env].name;
 }
 
@@ -972,6 +1342,10 @@ document.getElementById('retryBtn').onclick   = () => startGame();
 document.getElementById('playAgainBtn').onclick = () => startGame();
 document.getElementById('pauseBtn').onclick   = () => togglePause();
 document.getElementById('rescueNextBtn').onclick = () => advanceRescue();
+document.getElementById('continueBtn').onclick = () => startTwist();
+document.getElementById('twistNextBtn').onclick = (e) => { e.stopPropagation(); showOutro(); };
+document.getElementById('twistScreen').addEventListener('click', skipTwist);
+document.getElementById('outroRestartBtn').onclick = () => { stopWeide(); startGame(); };
 
 /* ---------------------------------------------------------------------------
    8. UPDATE LOGIC
@@ -991,6 +1365,7 @@ function update() {
   updateObstacles();
   if (boss) updateBoss();
   updateProjectiles();
+  updateHotfixes();
   updateParticles();
   updateCamera();
   checkGoal();
@@ -1016,6 +1391,16 @@ function updatePlayer() {
   input.jump = false; // consume
   // variable jump height (release to cut)
   if (!input.jumpHeld && p.vy < -4) p.vy = -4;
+
+  // Emergency Hotfix — press X to fire (limited ammo, Mario-fireball style)
+  if (input.shoot) {
+    if (state.hotfix > 0) {
+      shootHotfix();
+    } else {
+      Sound.empty();
+    }
+  }
+  input.shoot = false; // consume
 
   // gravity
   p.vy += GRAVITY;
@@ -1065,12 +1450,24 @@ function resolveCollisions(axis) {
 
 function updateEnemies() {
   for (const e of enemies) {
-    if (!e.alive) continue;
+    if (!e.alive) {
+      // QA Reopened Ticket (and any timed enemy) comes back after a delay
+      if (e.respawnTimer > 0) {
+        e.respawnTimer--;
+        if (e.respawnTimer === 0) {
+          e.alive = true; e.hp = e.maxHp; e.x = e.homeX;
+          spawnParticles(e.x + e.w/2, e.y + e.h/2, '#ff6b9d', 14, 3.5);
+          spawnFloatText(e.x, e.y, 'REOPENED!');
+        }
+      }
+      continue;
+    }
+    if (e.hurtFlash > 0) e.hurtFlash--;
     e.x += e.speed * e.dir;
     if (e.x < e.minX) { e.x = e.minX; e.dir = 1; }
     if (e.x > e.maxX) { e.x = e.maxX; e.dir = -1; }
 
-    const eb = {x:e.x, y:e.y, w:34, h:34};
+    const eb = {x:e.x, y:e.y, w:e.w, h:e.h};
     if (player.invuln <= 0 && aabb(player, eb)) {
       // stomp if falling onto the top
       const fromAbove = player.vy > 0 && (player.y + player.h) - eb.y < 22;
@@ -1079,7 +1476,7 @@ function updateEnemies() {
         player.vy = JUMP_VELOCITY * 0.7; // bounce
         Sound.stomp();
         addScore(200);
-        spawnParticles(e.x+17, e.y+17, '#ff5468', 14, 3.5);
+        spawnParticles(e.x+e.w/2, e.y+e.h/2, '#ff5468', 14, 3.5);
         spawnFloatText(e.x, e.y, '+200');
       } else {
         loseLife('Touched a ' + e.type + '.');
@@ -1097,8 +1494,21 @@ function updateCollectibles() {
       c.collected = true;
       const pts = COLLECTIBLE_POINTS[c.type] || 50;
       addScore(pts);
-      Sound.coin();
       spawnParticles(c.x+12, c.y+12, collectibleColor(c.type), 12, 3);
+      // Coffee / PagerDuty refill an Emergency Hotfix (capped at HOTFIX_MAX).
+      if (AMMO_TYPES.has(c.type)) {
+        if (state.hotfix < HOTFIX_MAX) {
+          state.hotfix++;
+          Sound.reload();
+          spawnFloatText(c.x, c.y-4, '+🔧 HOTFIX');
+        } else {
+          Sound.coin();
+          spawnFloatText(c.x, c.y-4, '+'+pts); // already maxed, just points
+        }
+        updateHUD();
+        continue;
+      }
+      Sound.coin();
       spawnFloatText(c.x, c.y, '+'+pts);
       // Every 3 wada pavs (the "Coffee Cup" collectible) earns a 1-UP.
       if (c.type === 'Coffee Cup') {
@@ -1190,6 +1600,147 @@ function updateProjectiles() {
   projectiles = projectiles.filter(pr => pr.life > 0 && pr.x > -40 && pr.x < level.width+40);
 }
 
+/* ---- Emergency Hotfix: the engineer's fireball ---- */
+function shootHotfix() {
+  const p = player;
+  state.hotfix--;
+  hotfixes.push({
+    x: p.facing > 0 ? p.x + p.w : p.x - 14,
+    y: p.y + 12,
+    vx: p.facing * 6.6,
+    vy: -2.2,
+    w: 16, h: 16, life: 150, spin: 0,
+  });
+  Sound.shoot();
+  spawnParticles(p.x + p.w/2, p.y + 14, '#7af0cb', 5, 2);
+  updateHUD();
+}
+
+function updateHotfixes() {
+  for (const h of hotfixes) {
+    h.vy += GRAVITY * 0.4;            // arcs and bounces like a fireball
+    h.x += h.vx;
+    h.y += h.vy;
+    h.life--;
+    h.spin += 0.4;
+    // bounce off the ground
+    if (h.y + h.h > GROUND_Y) { h.y = GROUND_Y - h.h; h.vy = -7; }
+    // bounce off platform tops
+    for (const plat of level.platforms) {
+      if (h.x + h.w > plat.x && h.x < plat.x + plat.w &&
+          h.y + h.h > plat.y && h.y + h.h < plat.y + plat.h + 12 && h.vy > 0) {
+        h.y = plat.y - h.h; h.vy = -7;
+      }
+    }
+    // hit enemies
+    for (const e of enemies) {
+      if (!e.alive) continue;
+      if (aabb(h, {x:e.x, y:e.y, w:e.w, h:e.h})) {
+        const consumed = hitEnemyWithHotfix(e, h);
+        if (consumed) { h.life = 0; break; }
+      }
+    }
+    // hit the boss (Emergency Hotfix also chips the Friday Evening Deployment)
+    if (boss && h.life > 0 && aabb(h, {x:boss.x, y:boss.y, w:boss.w, h:boss.h})) {
+      boss.hp--;
+      h.life = 0;
+      Sound.boss();
+      state.shake = 8;
+      addScore(150);
+      spawnParticles(boss.x+boss.w/2, boss.y+30, '#7af0cb', 14, 4);
+      spawnFloatText(boss.x, boss.y, 'HOTFIX! -1 HP');
+      if (boss.hp <= 0) {
+        spawnParticles(boss.x+boss.w/2, boss.y+boss.h/2, '#2ee6a6', 50, 7);
+        spawnFloatText(boss.x, boss.y-20, 'BOSS DEFEATED +2000');
+        addScore(2000);
+        boss = null;
+      }
+    }
+  }
+  hotfixes = hotfixes.filter(h => h.life > 0 && h.x > -40 && h.x < level.width + 40);
+}
+
+// Apply the per-enemy reaction to a hotfix hit. Returns true if the hotfix
+// is consumed (stops), false if it passes through (e.g. immune enemy).
+function hitEnemyWithHotfix(e, h) {
+  switch (e.type) {
+    case 'Missing ENV Variable':
+      // immune — you can't hotfix what was never configured
+      spawnFloatText(e.x, e.y - 6, 'IMMUNE');
+      spawnParticles(e.x + e.w/2, e.y + e.h/2, '#ff9f43', 6, 2);
+      return false;
+
+    case 'Merge Conflict':
+      if (e.gen === 0) {
+        // splits into two smaller conflicts
+        e.alive = false;
+        addScore(75);
+        Sound.stomp();
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#c44dff', 12, 3.5);
+        spawnFloatText(e.x, e.y, 'SPLIT!');
+        const span = 60;
+        for (const dir of [-1, 1]) {
+          enemies.push(makeEnemy({
+            type: 'Merge Conflict',
+            x: e.x + dir * 14,
+            y: e.y + 12,
+            minX: Math.max(0, e.x - span),
+            maxX: Math.min(level.width - 22, e.x + span),
+            speed: (e.speed || 1.4) * 1.3,
+            gen: 1, w: 22, h: 22,
+          }));
+        }
+        // fix child generation/direction
+        enemies[enemies.length-2].dir = -1;
+        enemies[enemies.length-1].dir = 1;
+      } else {
+        // smaller conflicts die outright
+        e.alive = false;
+        addScore(50);
+        Sound.stomp();
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#c44dff', 10, 3);
+        spawnFloatText(e.x, e.y, 'RESOLVED');
+      }
+      return true;
+
+    case 'QA Reopened Ticket':
+      // disappears but respawns after a few seconds
+      e.alive = false;
+      e.respawnTimer = 180; // ~3s at 60fps
+      addScore(100);
+      Sound.stomp();
+      spawnParticles(e.x + e.w/2, e.y + e.h/2, '#ff6b9d', 12, 3.5);
+      spawnFloatText(e.x, e.y, 'CLOSED… for now');
+      return true;
+
+    case 'Database Migration Failure':
+      // requires 2 hotfix hits
+      e.hp--;
+      e.hurtFlash = 12;
+      if (e.hp <= 0) {
+        e.alive = false;
+        addScore(250);
+        Sound.stomp();
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#4aa3ff', 16, 4);
+        spawnFloatText(e.x, e.y, 'MIGRATED ✓');
+      } else {
+        Sound.hurt();
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, '#4aa3ff', 8, 3);
+        spawnFloatText(e.x, e.y, '1 more hit!');
+      }
+      return true;
+
+    default:
+      // Legacy Bug, 502 Gateway Error — destroyed instantly
+      e.alive = false;
+      addScore(150);
+      Sound.stomp();
+      spawnParticles(e.x + e.w/2, e.y + e.h/2, '#ff5468', 14, 3.5);
+      spawnFloatText(e.x, e.y, 'PATCHED!');
+      return true;
+  }
+}
+
 // floating score text
 let floatTexts = [];
 function spawnFloatText(x, y, text) {
@@ -1242,7 +1793,8 @@ function drawSpriteOrRect(img, x, y, w, h, color, topColor) {
 
 function collectibleColor(type) {
   return { 'PR Approval':'#ffcc3f','Jira Ticket':'#4aa3ff',
-           'Coffee Cup':'#8b5a2b','Green Build Badge':'#2ee6a6' }[type] || '#fff';
+           'Coffee Cup':'#8b5a2b','Green Build Badge':'#2ee6a6',
+           'Coffee':'#c8884a','PagerDuty':'#06ac38' }[type] || '#fff';
 }
 
 function render() {
@@ -1269,6 +1821,7 @@ function render() {
   drawEnemies();
   if (boss) drawBoss();
   drawProjectiles();
+  drawHotfixes();
   drawGoal(env);
   drawPlayer();
   drawParticles();
@@ -1463,6 +2016,26 @@ function drawCollectibleIcon(type, x, y, col) {
     // steam
     ctx.strokeStyle='rgba(255,255,255,0.5)';
     ctx.beginPath(); ctx.moveTo(x+8,y+2); ctx.quadraticCurveTo(x+11,y-2,x+8,y-5); ctx.stroke();
+  } else if (type === 'Coffee') {
+    // takeaway coffee cup (hotfix ammo)
+    ctx.fillStyle = '#c8884a';
+    ctx.beginPath();
+    ctx.moveTo(x+4,y+6); ctx.lineTo(x+20,y+6); ctx.lineTo(x+17,y+24); ctx.lineTo(x+7,y+24); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.fillRect(x+3, y+3, 18, 4);    // lid
+    ctx.fillStyle='#7a4a22'; ctx.fillRect(x+8, y+11, 8, 4); // sleeve
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x+10,y); ctx.quadraticCurveTo(x+13,y-4,x+10,y-7); ctx.stroke();
+  } else if (type === 'PagerDuty') {
+    // pager / alert puck (hotfix ammo)
+    ctx.fillStyle = '#06ac38';
+    ctx.beginPath(); ctx.arc(x+12, y+13, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#053'; ctx.fillRect(x+6, y+9, 12, 8);
+    ctx.fillStyle='#bfffd4'; ctx.font='bold 8px Consolas, monospace'; ctx.textAlign='center';
+    ctx.fillText('911', x+12, y+16);
+    // little antenna
+    ctx.strokeStyle='#06ac38'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x+12,y+2); ctx.lineTo(x+12,y-3); ctx.stroke(); ctx.lineWidth=1;
+    ctx.textAlign='left';
   } else { // Green Build Badge
     ctx.beginPath();
     ctx.moveTo(x+12,y); ctx.lineTo(x+24,y+8); ctx.lineTo(x+20,y+24);
@@ -1478,7 +2051,7 @@ function drawEnemies() {
     const img = SPRITES.enemies[e.type];
     // TODO(assets): SPRITES.enemies[e.type] image goes here
     if (img && img.__ready) {
-      ctx.drawImage(img, e.x, e.y, 34, 34);
+      ctx.drawImage(img, e.x, e.y, e.w, e.h);
     } else {
       drawEnemyPlaceholder(e);
     }
@@ -1495,25 +2068,32 @@ const ENEMY_STYLE = {
 };
 function drawEnemyPlaceholder(e) {
   const s = ENEMY_STYLE[e.type] || {c:'#ff5468', face:'!'};
+  const w = e.w, h = e.h, k = w/34;          // k = scale relative to base 34px
   const wob = Math.sin(state.time*0.15 + e.x*0.05)*2;
-  ctx.fillStyle = s.c;
-  ctx.fillRect(e.x, e.y + wob, 34, 34);
-  // eyes
+  // damaged Database Migration flashes white briefly
+  ctx.fillStyle = (e.hurtFlash > 0 && (state.time>>1)%2===0) ? '#ffffff' : s.c;
+  ctx.fillRect(e.x, e.y + wob, w, h);
+  // eyes (scaled)
   ctx.fillStyle = '#fff';
-  ctx.fillRect(e.x+6, e.y+8+wob, 8, 8);
-  ctx.fillRect(e.x+20, e.y+8+wob, 8, 8);
+  ctx.fillRect(e.x+6*k, e.y+8*k+wob, 8*k, 8*k);
+  ctx.fillRect(e.x+20*k, e.y+8*k+wob, 8*k, 8*k);
   ctx.fillStyle = '#000';
-  const look = e.dir > 0 ? 3 : 0;
-  ctx.fillRect(e.x+8+look, e.y+11+wob, 3, 3);
-  ctx.fillRect(e.x+22+look, e.y+11+wob, 3, 3);
+  const look = e.dir > 0 ? 3*k : 0;
+  ctx.fillRect(e.x+8*k+look, e.y+11*k+wob, 3*k, 3*k);
+  ctx.fillRect(e.x+22*k+look, e.y+11*k+wob, 3*k, 3*k);
+  // health pip for 2-hit enemies that have been hit once
+  if (e.maxHp > 1 && e.hp < e.maxHp) {
+    ctx.fillStyle = '#ffcc3f';
+    ctx.fillRect(e.x, e.y - 6, w * (e.hp/e.maxHp), 3);
+  }
   // label
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   ctx.font = 'bold 8px Consolas, monospace'; ctx.textAlign='center';
-  ctx.fillText(e.type, e.x+17, e.y - 4);
+  ctx.fillText(e.type, e.x+w/2, e.y - 8);
   // tiny face glyph
-  ctx.font = '11px Consolas, monospace';
+  ctx.font = (10*k|0)+'px Consolas, monospace';
   ctx.fillStyle = 'rgba(0,0,0,0.7)';
-  ctx.fillText(s.face, e.x+17, e.y+28+wob);
+  ctx.fillText(s.face, e.x+w/2, e.y+h-6+wob);
   ctx.textAlign='left';
 }
 
@@ -1566,6 +2146,25 @@ function drawProjectiles() {
     // label
     ctx.fillStyle='rgba(255,123,0,0.9)'; ctx.font='7px Consolas, monospace'; ctx.textAlign='center';
     ctx.fillText('Incident', pr.x+pr.w/2, pr.y-3); ctx.textAlign='left';
+  }
+}
+
+function drawHotfixes() {
+  for (const h of hotfixes) {
+    ctx.save();
+    ctx.translate(h.x + h.w/2, h.y + h.h/2);
+    ctx.rotate(h.spin);
+    // glowing green hotfix orb with a wrench glyph
+    ctx.shadowColor = '#2ee6a6'; ctx.shadowBlur = 10;
+    ctx.fillStyle = '#2ee6a6';
+    ctx.beginPath(); ctx.arc(0, 0, h.w/2, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#042018';
+    ctx.font = 'bold 11px Consolas, monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🔧', 0, 1);
+    ctx.restore();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 }
 
