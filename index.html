@@ -170,6 +170,56 @@
     white-space: nowrap;
   }
 
+  /* ---------- Rescue cutscene ---------- */
+  #rescueCast {
+    display: flex; gap: clamp(10px, 3vw, 34px);
+    justify-content: center; align-items: flex-end;
+    margin: 12px 0 18px; flex-wrap: wrap;
+  }
+  #rescueCast .cast {
+    display: flex; flex-direction: column; align-items: center;
+    transition: transform .2s ease, filter .2s ease, opacity .2s ease;
+    filter: grayscale(0.55) brightness(0.7);
+    opacity: 0.7;
+  }
+  #rescueCast .cast.active {
+    transform: translateY(-8px) scale(1.06);
+    filter: none; opacity: 1;
+  }
+  #rescueCast .cast img {
+    width: clamp(74px, 16vw, 130px);
+    height: clamp(74px, 16vw, 130px);
+    object-fit: cover;
+    border-radius: 14px;
+    border: 2px solid rgba(46,230,166,0.35);
+    background: rgba(0,0,0,0.3);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+  }
+  #rescueCast .cast.active img {
+    border-color: var(--accent);
+    box-shadow: 0 0 22px rgba(46,230,166,0.55);
+  }
+  #rescueCast figcaption {
+    margin-top: 8px; font-weight: 700; font-size: clamp(12px,1.8vw,15px); color:#eaf2ff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  #rescueCast figcaption small { color:#9fb2d0; font-weight: 500; font-size: 0.78em; }
+  #rescueDialogue {
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(46,230,166,0.3);
+    border-radius: 12px;
+    padding: 14px 22px;
+    max-width: 620px; min-height: 80px;
+    margin-bottom: 16px;
+  }
+  #rescueSpeaker {
+    display:inline-block; font-weight: 800; color: var(--accent2);
+    font-size: clamp(13px,2vw,17px); margin-bottom: 6px;
+  }
+  #rescueLine {
+    margin: 0; color:#eaf2ff; font-size: clamp(14px,2.2vw,19px); line-height:1.5; font-style: italic;
+  }
+
   /* ---------- Touch controls ---------- */
   #touch {
     position: absolute; inset: 0; z-index: 15; pointer-events: none;
@@ -257,6 +307,31 @@
     <button class="btn" id="retryBtn">↺ Redeploy (Restart)</button>
   </div>
 
+  <!-- ============ RESCUE CUTSCENE ============ -->
+  <div id="rescueScreen" class="overlay hidden">
+    <h1 style="font-size:clamp(18px,4vw,34px)">🔓 PRODUCTION DATACENTER</h1>
+    <h2 id="rescueSub">Behind the Change Freeze Shield…</h2>
+    <div id="rescueCast">
+      <figure class="cast" data-role="BA">
+        <img src="assets/Kunal-BA.png" alt="Kunal — BA">
+        <figcaption>Kunal<small>Business Analyst</small></figcaption>
+      </figure>
+      <figure class="cast" data-role="PM">
+        <img src="assets/Vidya-PM.png" alt="Vidya — PM">
+        <figcaption>Vidya<small>Project Manager</small></figcaption>
+      </figure>
+      <figure class="cast" data-role="PO">
+        <img src="assets/Justin-PO.png" alt="Justin — PO">
+        <figcaption>Justin<small>Product Owner</small></figcaption>
+      </figure>
+    </div>
+    <div id="rescueDialogue">
+      <span id="rescueSpeaker">Devanshu</span>
+      <p id="rescueLine">…</p>
+    </div>
+    <button class="btn" id="rescueNextBtn">Next ▸</button>
+  </div>
+
   <!-- ============ WIN SCREEN ============ -->
   <div id="winScreen" class="overlay hidden">
     <h1>🚀 DEPLOYMENT SUCCESSFUL</h1>
@@ -312,7 +387,7 @@ const JUMP_VELOCITY = -12.6;
 const TILE = 40;                            // logical tile size for layout
 
 // Game phases
-const PHASE = { MENU:'menu', PLAY:'play', PAUSE:'pause', OVER:'over', WIN:'win', TRANSITION:'transition' };
+const PHASE = { MENU:'menu', PLAY:'play', PAUSE:'pause', OVER:'over', WIN:'win', RESCUE:'rescue', TRANSITION:'transition' };
 
 let state = {
   phase: PHASE.MENU,
@@ -718,6 +793,7 @@ const dom = {
   pause: document.getElementById('pauseScreen'),
   over: document.getElementById('overScreen'),
   win: document.getElementById('winScreen'),
+  rescue: document.getElementById('rescueScreen'),
 };
 
 function show(el){ el.classList.remove('hidden'); }
@@ -807,6 +883,56 @@ function saveBest() {
   }
 }
 
+/* ---- Rescue cutscene: BA / PM / PO trapped behind the Change Freeze Shield ----
+   Plays after the Friday Evening Deployment boss falls, then flows into the
+   win screen. `role` highlights the matching portrait (Kunal/Vidya/Justin). */
+const RESCUE_SCRIPT = [
+  { role:null, speaker:'Production Datacenter', line:'The Change Freeze Shield shatters. Three figures step into the light…' },
+  { role:'BA', speaker:'Kunal (BA)',  line:'"The requirements changed 17 times. Yet somehow you understood all of them."' },
+  { role:'PM', speaker:'Vidya (PM)',  line:'"The timeline was impossible. Yet somehow you delivered."' },
+  { role:'PO', speaker:'Justin (PO)', line:'"There is one more feature."' },
+  { role:null, speaker:'Devanshu',    line:'"No."' },
+  { role:'PO', speaker:'Justin (PO)', line:'"Fair."' },
+];
+let rescueIdx = 0;
+const rescueEl = {
+  sub: document.getElementById('rescueSub'),
+  speaker: document.getElementById('rescueSpeaker'),
+  line: document.getElementById('rescueLine'),
+  next: document.getElementById('rescueNextBtn'),
+  cast: () => document.querySelectorAll('#rescueCast .cast'),
+};
+
+function startRescue() {
+  state.phase = PHASE.RESCUE;
+  saveBest();
+  rescueIdx = 0;
+  show(dom.rescue);
+  renderRescueLine();
+  Sound.level();
+}
+
+function renderRescueLine() {
+  const step = RESCUE_SCRIPT[rescueIdx];
+  rescueEl.speaker.textContent = step.speaker;
+  rescueEl.line.textContent = step.line;
+  // highlight the active speaker's portrait
+  rescueEl.cast().forEach(fig => fig.classList.toggle('active', fig.dataset.role === step.role));
+  rescueEl.next.textContent = (rescueIdx >= RESCUE_SCRIPT.length - 1) ? 'Deploy ▸' : 'Next ▸';
+}
+
+function advanceRescue() {
+  if (state.phase !== PHASE.RESCUE) return;
+  rescueIdx++;
+  if (rescueIdx >= RESCUE_SCRIPT.length) {
+    hide(dom.rescue);
+    winGame();
+  } else {
+    Sound.coin();
+    renderRescueLine();
+  }
+}
+
 function togglePause() {
   if (state.phase === PHASE.PLAY) {
     state.phase = PHASE.PAUSE;
@@ -845,6 +971,7 @@ document.getElementById('restartBtn').onclick = () => { hide(dom.pause); startGa
 document.getElementById('retryBtn').onclick   = () => startGame();
 document.getElementById('playAgainBtn').onclick = () => startGame();
 document.getElementById('pauseBtn').onclick   = () => togglePause();
+document.getElementById('rescueNextBtn').onclick = () => advanceRescue();
 
 /* ---------------------------------------------------------------------------
    8. UPDATE LOGIC
@@ -1092,7 +1219,7 @@ function checkGoal() {
   // Boss level: goal only opens once the boss is gone
   if (level.isBoss && boss) return;
   if (player.x + player.w > level.goalX) {
-    if (level.isBoss) winGame();
+    if (level.isBoss) startRescue();
     else nextLevel();
   }
 }
