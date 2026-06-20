@@ -133,6 +133,13 @@
     padding: 6px 12px;
     font-size: 15px;
   }
+  /* On narrow screens let the HUD wrap so every pill stays visible */
+  @media (max-width: 600px) {
+    #hud { flex-wrap: wrap; gap: 5px 6px; padding: 6px 8px; font-size: 11px; }
+    #hud .pill { padding: 4px 8px; }
+    #hud .spacer { display: none; }       /* drop the push so items wrap, not clip */
+    #pauseBtn { padding: 4px 9px; font-size: 12px; margin-left: auto; }
+  }
   #stageBanner {
     position: absolute;
     top: 18%;
@@ -381,12 +388,15 @@
   @keyframes weideFade { from { opacity: 0; } to { opacity: 1; } }
 
   /* ---------- Touch controls ---------- */
+  /* #touch is positioned by resize() to overlay the canvas (the "stage"),
+     so the buttons sit inside the visible play area and never fall into the
+     letterbox where mobile browser chrome would crop them. */
   #touch {
     position: absolute; inset: 0; z-index: 15; pointer-events: none;
   }
   .tbtn {
-    /* lift the controls clear of the bottom edge + device safe area (mobile) */
-    position: absolute; bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+    /* anchored near the bottom of the stage */
+    position: absolute; bottom: 16px;
     width: 74px; height: 74px;
     border-radius: 50%;
     background: rgba(46,230,166,0.16);
@@ -398,6 +408,8 @@
     touch-action: none;
   }
   .tbtn:active { background: rgba(46,230,166,0.35); }
+  /* when the touch layer is the band below the stage, sit just under it */
+  #touch.below .tbtn { top: 14px; bottom: auto; }
   #btnLeft  { left: 22px; }
   #btnRight { left: 124px; }
   #btnJump  { right: 26px; background: rgba(255,204,63,0.16); border-color: rgba(255,204,63,0.55); }
@@ -2361,8 +2373,39 @@ function resize() {
   if (w / h > aspect) w = h * aspect; else h = w / aspect;
   canvas.style.width = w + 'px';
   canvas.style.height = h + 'px';
+
+  // Position the touch controls relative to the canvas (the stage).
+  // If there is empty letterbox space below the stage (portrait phones),
+  // drop the buttons into that band right under the stage so they don't
+  // cover gameplay. Otherwise (landscape / little space) overlay the
+  // bottom of the stage. Either way they stay clear of the cropped edge.
+  const touch = document.getElementById('touch');
+  const r = canvas.getBoundingClientRect();
+  const below = wrap.clientHeight - r.bottom;
+  touch.style.inset = 'auto';
+  touch.style.left = r.left + 'px';
+  touch.style.width = r.width + 'px';
+  const credit = document.getElementById('credit');
+  if (below >= 110) {
+    touch.classList.add('below');
+    touch.style.top = r.bottom + 'px';
+    touch.style.height = Math.min(below, 170) + 'px';
+    // place the credit line right under the buttons (mobile)
+    if (isTouch) {
+      const br = document.getElementById('btnJump').getBoundingClientRect();
+      credit.style.top = (br.bottom + 12) + 'px';
+      credit.style.bottom = 'auto';
+    }
+  } else {
+    touch.classList.remove('below');
+    touch.style.top = r.top + 'px';
+    touch.style.height = r.height + 'px';
+    credit.style.top = '';      // revert to the default bottom-center position
+    credit.style.bottom = '';
+  }
 }
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 resize();
 
 // initialize HUD best display
